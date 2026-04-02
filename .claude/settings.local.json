@@ -1,0 +1,10 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(python -c \":*)",
+      "Bash(find \"/c/Users/lsl/Desktop/MetaVR \\(2\\)/Jump/Doodle-Jump-Unity3D-Game\" -type f -name \"*.cs\")",
+      "Bash(ls -la \"/c/Users/lsl/Desktop/MetaVR \\(2\\)/Jump/Doodle-Jump-Unity3D-Game/Assets/\")",
+      "Bash(wc -l \"c:/Users/lsl/Desktop/MetaVR \\(2\\)/Jump/Doodle-Jump-Unity3D-Game/Assets/Prefab/In_Game.unity\")"
+    ]
+  }
+}

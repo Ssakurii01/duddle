@@ -20,6 +20,14 @@ public class Camera_Follow : MonoBehaviour {
     {
         Game_Controller = GameObject.Find("Game_Controller");
         startColor = Camera.main.backgroundColor;
+
+        // Auto-find the spawned Doodler if Target is not set
+        if (Target == null)
+        {
+            GameObject doodler = GameObject.Find("Doodler");
+            if (doodler != null)
+                Target = doodler.transform;
+        }
     }
 
     // Update is called once per frame

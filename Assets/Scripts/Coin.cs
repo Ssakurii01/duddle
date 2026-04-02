@@ -10,13 +10,21 @@ public class Coin : MonoBehaviour {
 
     void Start()
     {
-        // Create a coin sprite at runtime
+        // Load coin sprite from assets
         spriteRenderer = gameObject.AddComponent<SpriteRenderer>();
-        spriteRenderer.sprite = CreateCoinSprite();
-        spriteRenderer.color = new Color(1f, 0.85f, 0f); // Gold
+        Sprite coinSprite = Resources.Load<Sprite>("CoinIcon");
+        // Try loading as sub-sprite if single mode fails
+        if (coinSprite == null)
+        {
+            Sprite[] all = Resources.LoadAll<Sprite>("CoinIcon");
+            if (all != null && all.Length > 0)
+                coinSprite = all[0];
+        }
+        spriteRenderer.sprite = coinSprite != null ? coinSprite : CreateCoinSprite();
+        spriteRenderer.color = Color.white;
         spriteRenderer.sortingOrder = 4;
 
-        transform.localScale = new Vector3(0.3f, 0.3f, 1f);
+        transform.localScale = new Vector3(0.7f, 0.7f, 1f);
 
         // Add rigidbody (kinematic for trigger detection)
         Rigidbody2D rb = gameObject.AddComponent<Rigidbody2D>();

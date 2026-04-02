@@ -63,6 +63,7 @@ public class Button_OnClick : MonoBehaviour {
         Set_Error(false);
 
         // Send high score to server
+        if (Background_Canvas.transform.childCount <= 14) return;
         string Name = Background_Canvas.transform.GetChild(14).GetComponent<InputField>().text;
         int High_Score = Data_Manager.Get_HighScore();
 
@@ -110,41 +111,88 @@ public class Button_OnClick : MonoBehaviour {
     public static void Set_GameOverMenu(bool State)
     {
         GameObject Background_Canvas = GameObject.Find("Background_Canvas");
+        int count = Background_Canvas.transform.childCount;
 
-        for (int i = 1; i < 12; i++)
-            Background_Canvas.transform.GetChild(i).gameObject.SetActive(State);
+        // Only show children that have a Button component (play again, menu)
+        // Hide all text, input fields, and other elements
+        for (int i = 1; i < 12 && i < count; i++)
+        {
+            Transform child = Background_Canvas.transform.GetChild(i);
+            Button btn = child.GetComponent<Button>();
+
+            if (btn != null)
+            {
+                // Show buttons, but skip "submit score" / "share" / "tap to change" buttons
+                string btnName = child.name.ToLower();
+                bool isPlayAgain = btnName.Contains("play") || btnName.Contains("again");
+                bool isMenu = btnName.Contains("menu");
+
+                // Also check button text
+                Text btnText = child.GetComponentInChildren<Text>();
+                if (btnText != null)
+                {
+                    string txt = btnText.text.ToLower();
+                    isPlayAgain = isPlayAgain || txt.Contains("play again");
+                    isMenu = isMenu || txt.Contains("menu");
+                }
+
+                if (isPlayAgain || isMenu)
+                    child.gameObject.SetActive(State);
+                else
+                    child.gameObject.SetActive(false); // Hide submit/share/other buttons
+            }
+            else
+            {
+                // Hide all non-button elements (score texts, name texts, etc.)
+                child.gameObject.SetActive(false);
+            }
+        }
     }
 
     public static void Set_SubmitScoreMenu(bool State)
     {
         GameObject Background_Canvas = GameObject.Find("Background_Canvas");
+        int count = Background_Canvas.transform.childCount;
 
-        for (int i = 12; i < 17; i++)
+        for (int i = 12; i < 17 && i < count; i++)
             Background_Canvas.transform.GetChild(i).gameObject.SetActive(State);
 
         // Set player name (if exist) and Input field set focus
-        Background_Canvas.transform.GetChild(14).GetComponent<InputField>().text = Data_Manager.Get_PlayerName();
-        Background_Canvas.transform.GetChild(14).GetComponent<InputField>().Select();
+        if (count > 14)
+        {
+            InputField input = Background_Canvas.transform.GetChild(14).GetComponent<InputField>();
+            if (input != null)
+            {
+                input.text = Data_Manager.Get_PlayerName();
+                input.Select();
+            }
+        }
     }
 
     public static void Set_InteractableSubmitScore(bool State)
     {
         GameObject Background_Canvas = GameObject.Find("Background_Canvas");
+        int count = Background_Canvas.transform.childCount;
+
+        if (count <= 14) return;
 
         // Active or deactive input field and buttons until server response
-        Background_Canvas.transform.GetChild(14).GetComponent<InputField>().interactable = State;
-        Background_Canvas.transform.GetChild(15).GetComponent<Button>().interactable = State;
-        Background_Canvas.transform.GetChild(16).GetComponent<Button>().interactable = State;
+        InputField inputField = Background_Canvas.transform.GetChild(14).GetComponent<InputField>();
+        if (inputField != null) inputField.interactable = State;
 
-        if(State)
+        if (count > 15)
         {
-            Background_Canvas.transform.GetChild(15).GetComponent<Image>().color = new Color(1, 1, 1, 1);
-            Background_Canvas.transform.GetChild(16).GetComponent<Image>().color = new Color(1, 1, 1, 1);
+            Button btn15 = Background_Canvas.transform.GetChild(15).GetComponent<Button>();
+            if (btn15 != null) btn15.interactable = State;
+            Image img15 = Background_Canvas.transform.GetChild(15).GetComponent<Image>();
+            if (img15 != null) img15.color = new Color(1, 1, 1, State ? 1f : 0.5f);
         }
-        else
+        if (count > 16)
         {
-            Background_Canvas.transform.GetChild(15).GetComponent<Image>().color = new Color(1, 1, 1, 0.5f);
-            Background_Canvas.transform.GetChild(16).GetComponent<Image>().color = new Color(1, 1, 1, 0.5f);
+            Button btn16 = Background_Canvas.transform.GetChild(16).GetComponent<Button>();
+            if (btn16 != null) btn16.interactable = State;
+            Image img16 = Background_Canvas.transform.GetChild(16).GetComponent<Image>();
+            if (img16 != null) img16.color = new Color(1, 1, 1, State ? 1f : 0.5f);
         }
     }
 
@@ -160,17 +208,20 @@ public class Button_OnClick : MonoBehaviour {
     
     public static void Set_Error(bool State)
     {
-        // Active or deactive error
         GameObject Background_Canvas = GameObject.Find("Background_Canvas");
-        Background_Canvas.transform.GetChild(17).gameObject.SetActive(State);
+        if (Background_Canvas.transform.childCount > 17)
+            Background_Canvas.transform.GetChild(17).gameObject.SetActive(State);
     }
 
     public static void Set_Error(bool State, string Message)
     {
-        // Active or deactive error and message
         GameObject Background_Canvas = GameObject.Find("Background_Canvas");
-        Background_Canvas.transform.GetChild(17).gameObject.SetActive(State);
-        Background_Canvas.transform.GetChild(17).GetComponent<Text>().text = Message;
+        if (Background_Canvas.transform.childCount > 17)
+        {
+            Background_Canvas.transform.GetChild(17).gameObject.SetActive(State);
+            Text txt = Background_Canvas.transform.GetChild(17).GetComponent<Text>();
+            if (txt != null) txt.text = Message;
+        }
     }
 
     public static void Set_RecordListView(int Index, string Name, int High_Score)

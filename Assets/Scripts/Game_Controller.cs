@@ -6,6 +6,9 @@ using UnityEngine.UI;
 
 public class Game_Controller : MonoBehaviour {
 
+    public GameObject PlayerPrefab;
+    public Vector3 SpawnPosition = new Vector3(0f, -3f, 0f);
+
     private GameObject Player;
 
     private float Max_Height = 0;
@@ -40,21 +43,45 @@ public class Game_Controller : MonoBehaviour {
 	void Awake ()
     {
         Game_Started = false;
-        Player = GameObject.Find("Doodler");
+
+        // Spawn the player from prefab
+        Player = Instantiate(PlayerPrefab, SpawnPosition, Quaternion.identity);
+        Player.name = "Doodler";
+
+        // Hide submit score and game over menus on start (prevent text overlap)
+        HideSubmitScoreMenu();
 
         // Initialize boundary
         Camera_Pos = Camera.main.transform.position;
         Top_Left = Camera.main.ScreenToWorldPoint(new Vector3(0, 0, 0));
+
+        // Make sure the score Canvas is visible and in Overlay mode
+        Canvas scoreCanvas = Txt_Score.GetComponentInParent<Canvas>();
+        if (scoreCanvas != null)
+        {
+            scoreCanvas.renderMode = RenderMode.ScreenSpaceOverlay;
+            scoreCanvas.sortingOrder = 10;
+            scoreCanvas.gameObject.SetActive(true);
+
+            CanvasScaler scaler = scoreCanvas.GetComponent<CanvasScaler>();
+            if (scaler != null)
+            {
+                scaler.uiScaleMode = CanvasScaler.ScaleMode.ScaleWithScreenSize;
+                scaler.referenceResolution = new Vector2(1080, 1920);
+                scaler.screenMatchMode = CanvasScaler.ScreenMatchMode.MatchWidthOrHeight;
+                scaler.matchWidthOrHeight = 0.5f;
+            }
+        }
 
         // Position score text on the top-left of the screen
         RectTransform scoreRect = Txt_Score.GetComponent<RectTransform>();
         scoreRect.anchorMin = new Vector2(0, 1);
         scoreRect.anchorMax = new Vector2(0, 1);
         scoreRect.pivot = new Vector2(0, 1);
-        scoreRect.sizeDelta = new Vector2(300, 50);
-        scoreRect.anchoredPosition = new Vector2(10, -10);
+        scoreRect.sizeDelta = new Vector2(500, 100);
+        scoreRect.anchoredPosition = new Vector2(20, -20);
         Txt_Score.alignment = TextAnchor.UpperLeft;
-        Txt_Score.fontSize = 28;
+        Txt_Score.fontSize = 36;
         Txt_Score.color = Color.white;
         Txt_Score.horizontalOverflow = HorizontalWrapMode.Overflow;
         Txt_Score.verticalOverflow = VerticalWrapMode.Overflow;
@@ -82,13 +109,31 @@ public class Game_Controller : MonoBehaviour {
         Time.timeScale = 0f;
 	}
 
+    void HideSubmitScoreMenu()
+    {
+        GameObject bgCanvas = GameObject.Find("Background_Canvas");
+        if (bgCanvas == null) return;
+
+        // Hide game over menu elements (children 1-11)
+        for (int i = 1; i < 12 && i < bgCanvas.transform.childCount; i++)
+            bgCanvas.transform.GetChild(i).gameObject.SetActive(false);
+
+        // Hide submit score menu elements (children 12-16)
+        for (int i = 12; i < 17 && i < bgCanvas.transform.childCount; i++)
+            bgCanvas.transform.GetChild(i).gameObject.SetActive(false);
+
+        // Hide error message (child 17)
+        if (bgCanvas.transform.childCount > 17)
+            bgCanvas.transform.GetChild(17).gameObject.SetActive(false);
+    }
+
     void Create_HighScoreText()
     {
         GameObject highScoreObj = new GameObject("HighScore_Text");
         highScoreObj.transform.SetParent(Txt_Score.transform.parent, false);
         Txt_HighScore = highScoreObj.AddComponent<Text>();
         Txt_HighScore.font = Txt_Score.font;
-        Txt_HighScore.fontSize = 22;
+        Txt_HighScore.fontSize = 30;
         Txt_HighScore.color = new Color(1f, 0.85f, 0.4f); // Gold color
         Txt_HighScore.alignment = TextAnchor.UpperRight;
         Txt_HighScore.horizontalOverflow = HorizontalWrapMode.Overflow;
@@ -100,8 +145,8 @@ public class Game_Controller : MonoBehaviour {
         highScoreRect.anchorMin = new Vector2(1, 1);
         highScoreRect.anchorMax = new Vector2(1, 1);
         highScoreRect.pivot = new Vector2(1, 1);
-        highScoreRect.sizeDelta = new Vector2(300, 40);
-        highScoreRect.anchoredPosition = new Vector2(-10, -10);
+        highScoreRect.sizeDelta = new Vector2(500, 80);
+        highScoreRect.anchoredPosition = new Vector2(-20, -20);
     }
 
     void Create_CoinText()
@@ -110,7 +155,7 @@ public class Game_Controller : MonoBehaviour {
         coinObj.transform.SetParent(Txt_Score.transform.parent, false);
         Txt_Coins = coinObj.AddComponent<Text>();
         Txt_Coins.font = Txt_Score.font;
-        Txt_Coins.fontSize = 20;
+        Txt_Coins.fontSize = 26;
         Txt_Coins.color = new Color(1f, 0.85f, 0f); // Gold
         Txt_Coins.alignment = TextAnchor.UpperRight;
         Txt_Coins.horizontalOverflow = HorizontalWrapMode.Overflow;
@@ -122,8 +167,8 @@ public class Game_Controller : MonoBehaviour {
         coinRect.anchorMin = new Vector2(1, 1);
         coinRect.anchorMax = new Vector2(1, 1);
         coinRect.pivot = new Vector2(1, 1);
-        coinRect.sizeDelta = new Vector2(300, 30);
-        coinRect.anchoredPosition = new Vector2(-10, -40);
+        coinRect.sizeDelta = new Vector2(500, 60);
+        coinRect.anchoredPosition = new Vector2(-20, -90);
     }
 
     public static void AddCoinScore(int value)
@@ -138,7 +183,7 @@ public class Game_Controller : MonoBehaviour {
         comboObj.transform.SetParent(Txt_Score.transform.parent, false);
         Txt_Combo = comboObj.AddComponent<Text>();
         Txt_Combo.font = Txt_Score.font;
-        Txt_Combo.fontSize = 22;
+        Txt_Combo.fontSize = 28;
         Txt_Combo.color = new Color(1f, 0.9f, 0.2f); // Yellow-gold
         Txt_Combo.alignment = TextAnchor.UpperLeft;
         Txt_Combo.horizontalOverflow = HorizontalWrapMode.Overflow;
@@ -150,8 +195,8 @@ public class Game_Controller : MonoBehaviour {
         comboRect.anchorMin = new Vector2(0, 1);
         comboRect.anchorMax = new Vector2(0, 1);
         comboRect.pivot = new Vector2(0, 1);
-        comboRect.sizeDelta = new Vector2(300, 40);
-        comboRect.anchoredPosition = new Vector2(10, -45);
+        comboRect.sizeDelta = new Vector2(600, 70);
+        comboRect.anchoredPosition = new Vector2(20, -100);
     }
 
     public static void AddCombo()
@@ -168,7 +213,7 @@ public class Game_Controller : MonoBehaviour {
         // Create a world-space text right above the doodler's starting platform
         PressToStartObj = new GameObject("PressToStart_Text");
         TextMesh textMesh = PressToStartObj.AddComponent<TextMesh>();
-        textMesh.text = "Press Space to Start";
+        textMesh.text = "Press to Start";
         textMesh.fontSize = 30;
         textMesh.characterSize = 0.05f;
         textMesh.color = Color.white;
@@ -185,8 +230,10 @@ public class Game_Controller : MonoBehaviour {
 
     void Update()
     {
-        // Wait for Space key to start the game
-        if (!Game_Started && Input.GetKeyDown(KeyCode.Space))
+        // Wait for Space or arcade Black button (JoystickButton0) to start
+        bool confirmPressed = Input.GetKeyDown(KeyCode.Space) || Input.GetKeyDown(KeyCode.JoystickButton0);
+
+        if (!Game_Started && confirmPressed)
         {
             Game_Started = true;
             Time.timeScale = 1f;
@@ -196,8 +243,8 @@ public class Game_Controller : MonoBehaviour {
                 Destroy(PressToStartObj);
         }
 
-        // Restart game with Space when game over
-        if (Game_Over && Input.GetKeyDown(KeyCode.Space))
+        // Restart game with Space or Black button when game over
+        if (Game_Over && confirmPressed)
         {
             Time.timeScale = 1f;
             UnityEngine.SceneManagement.SceneManager.LoadScene("In_Game");
@@ -278,11 +325,13 @@ public class Game_Controller : MonoBehaviour {
         if (Data_Manager.Get_HighScore() < Score)
             Data_Manager.Set_HighScore(Score);
 
-        Txt_GameOverScore.text = Score.ToString();
-        Txt_GameOverHighsocre.text = Data_Manager.Get_HighScore().ToString();
         GameObject Background_Canvas = GameObject.Find("Background_Canvas");
 
-        // Active game over menu
+        // Hide ALL submit score / text elements (children 12+)
+        for (int i = 12; i < Background_Canvas.transform.childCount; i++)
+            Background_Canvas.transform.GetChild(i).gameObject.SetActive(false);
+
+        // Show only play again and menu buttons
         Button_OnClick.Set_GameOverMenu(true);
 
         // Enable animation

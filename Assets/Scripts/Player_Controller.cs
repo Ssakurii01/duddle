@@ -33,7 +33,8 @@ public class Player_Controller : MonoBehaviour {
     {
         if (!Game_Controller.Game_Started) return;
 
-        // Set Movement value
+        // Set Movement value (keyboard + joystick for Luxodd arcade)
+        // "Horizontal" already reads both keyboard arrows and joystick axis
         Movement = Input.GetAxisRaw("Horizontal") * Movement_Speed;
 
         

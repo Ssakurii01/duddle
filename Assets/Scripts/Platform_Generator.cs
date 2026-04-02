@@ -27,11 +27,15 @@ public class Platform_Generator : MonoBehaviour {
     private int platformCount = 0;
 
 	// Use this for initialization
-	void Start () 
+	void Start ()
     {
         // Initialize boundary
         Top_Left = Camera.main.ScreenToWorldPoint(new Vector3(0, 0, 0));
         Offset = 1.2f;
+
+        // Spawn a starting platform directly under the doodler's feet
+        Vector3 startPlatformPos = new Vector3(0f, -4.0f, 0f);
+        Instantiate(Platform_Green, startPlatformPos, Quaternion.identity);
 
         // Initialize platforms
         Generate_Platform(15);
@@ -86,14 +90,13 @@ public class Platform_Generator : MonoBehaviour {
             else // Create green platform
                 Platform = Instantiate(Platform_Green, Platform_Pos, Quaternion.identity);
 
-            // Spawn coin every 7 platforms (only on green/blue, not white/brown)
+            // Spawn coin every 6 platforms (only on green/blue, not white/brown)
             platformCount++;
-            if (platformCount % 7 == 0 && Rand_Platform != 2 && Rand_BrownPlatform != 1)
+            if (platformCount % 6 == 0 && Rand_Platform != 2 && Rand_BrownPlatform != 1)
             {
-                float coinX = Platform_Pos.x + Random.Range(-0.3f, 0.3f);
-                float coinY = Platform_Pos.y + 0.5f;
+                float coinY = Platform_Pos.y + 0.7f;
                 GameObject coin = new GameObject("Coin");
-                coin.transform.position = new Vector3(coinX, coinY, 0);
+                coin.transform.position = new Vector3(Platform_Pos.x, coinY, 0);
                 coin.AddComponent<Coin>();
             }
 
