@@ -67,7 +67,7 @@ public class Game_Controller : MonoBehaviour {
             if (scaler != null)
             {
                 scaler.uiScaleMode = CanvasScaler.ScaleMode.ScaleWithScreenSize;
-                scaler.referenceResolution = new Vector2(1080, 1920);
+                scaler.referenceResolution = new Vector2(Screen.width, Screen.height);
                 scaler.screenMatchMode = CanvasScaler.ScreenMatchMode.MatchWidthOrHeight;
                 scaler.matchWidthOrHeight = 0.5f;
             }
@@ -81,7 +81,7 @@ public class Game_Controller : MonoBehaviour {
         scoreRect.sizeDelta = new Vector2(500, 100);
         scoreRect.anchoredPosition = new Vector2(20, -20);
         Txt_Score.alignment = TextAnchor.UpperLeft;
-        Txt_Score.fontSize = 36;
+        Txt_Score.fontSize = 26;
         Txt_Score.color = Color.white;
         Txt_Score.horizontalOverflow = HorizontalWrapMode.Overflow;
         Txt_Score.verticalOverflow = VerticalWrapMode.Overflow;
@@ -133,7 +133,7 @@ public class Game_Controller : MonoBehaviour {
         highScoreObj.transform.SetParent(Txt_Score.transform.parent, false);
         Txt_HighScore = highScoreObj.AddComponent<Text>();
         Txt_HighScore.font = Txt_Score.font;
-        Txt_HighScore.fontSize = 30;
+        Txt_HighScore.fontSize = 14;
         Txt_HighScore.color = new Color(1f, 0.85f, 0.4f); // Gold color
         Txt_HighScore.alignment = TextAnchor.UpperRight;
         Txt_HighScore.horizontalOverflow = HorizontalWrapMode.Overflow;
@@ -155,7 +155,7 @@ public class Game_Controller : MonoBehaviour {
         coinObj.transform.SetParent(Txt_Score.transform.parent, false);
         Txt_Coins = coinObj.AddComponent<Text>();
         Txt_Coins.font = Txt_Score.font;
-        Txt_Coins.fontSize = 26;
+        Txt_Coins.fontSize = 14;
         Txt_Coins.color = new Color(1f, 0.85f, 0f); // Gold
         Txt_Coins.alignment = TextAnchor.UpperRight;
         Txt_Coins.horizontalOverflow = HorizontalWrapMode.Overflow;
@@ -168,7 +168,7 @@ public class Game_Controller : MonoBehaviour {
         coinRect.anchorMax = new Vector2(1, 1);
         coinRect.pivot = new Vector2(1, 1);
         coinRect.sizeDelta = new Vector2(500, 60);
-        coinRect.anchoredPosition = new Vector2(-20, -90);
+        coinRect.anchoredPosition = new Vector2(-20, -36);
     }
 
     public static void AddCoinScore(int value)

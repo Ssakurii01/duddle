@@ -41,9 +41,22 @@ public class Platform_Generator : MonoBehaviour {
         Generate_Platform(15);
 	}
 	
-	// Update is called once per frame
-	void Update () {
-		
+	// Ensure platforms always exist above the camera view
+	void Update ()
+	{
+	    if (!Game_Controller.Game_Started) return;
+
+	    Camera cam = Camera.main;
+	    if (cam == null) return;
+
+	    // Always keep platforms generated at least 30 units above the camera top
+	    float cameraTop = cam.transform.position.y + cam.orthographicSize;
+	    float buffer = 30f;
+
+	    while (Current_Y < cameraTop + buffer)
+	    {
+	        Generate_Platform(1);
+	    }
 	}
 
     public void Generate_Platform(int Num)

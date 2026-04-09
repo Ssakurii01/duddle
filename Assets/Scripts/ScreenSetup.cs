@@ -11,7 +11,9 @@ public class ScreenSetup : MonoBehaviour
     [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.BeforeSceneLoad)]
     static void Init()
     {
-        Screen.SetResolution(1080, 1920, true);
+        // Use native screen resolution to avoid black bars
+        Resolution native = Screen.currentResolution;
+        Screen.SetResolution(native.width, native.height, true);
         Application.targetFrameRate = -1;
     }
 
@@ -35,11 +37,15 @@ public class ScreenSetup : MonoBehaviour
 
     static void FixCanvasScalers()
     {
+        // Use actual screen dimensions as reference so UI stays within visible area
+        float w = Screen.width;
+        float h = Screen.height;
+
         CanvasScaler[] scalers = Object.FindObjectsOfType<CanvasScaler>();
         foreach (CanvasScaler scaler in scalers)
         {
             scaler.uiScaleMode = CanvasScaler.ScaleMode.ScaleWithScreenSize;
-            scaler.referenceResolution = new Vector2(1080, 1920);
+            scaler.referenceResolution = new Vector2(w, h);
             scaler.screenMatchMode = CanvasScaler.ScreenMatchMode.MatchWidthOrHeight;
             scaler.matchWidthOrHeight = 0.5f;
         }

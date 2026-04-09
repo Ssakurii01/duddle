@@ -113,6 +113,8 @@ public class Button_OnClick : MonoBehaviour {
         GameObject Background_Canvas = GameObject.Find("Background_Canvas");
         int count = Background_Canvas.transform.childCount;
 
+        int playAgainIndex = 0;
+
         // Only show children that have a Button component (play again, menu)
         // Hide all text, input fields, and other elements
         for (int i = 1; i < 12 && i < count; i++)
@@ -137,7 +139,27 @@ public class Button_OnClick : MonoBehaviour {
                 }
 
                 if (isPlayAgain || isMenu)
+                {
                     child.gameObject.SetActive(State);
+
+                    if (State)
+                    {
+                        // Re-anchor to screen center so buttons appear regardless of aspect ratio
+                        RectTransform rt = child.GetComponent<RectTransform>();
+                        if (rt != null)
+                        {
+                            rt.anchorMin = new Vector2(0.5f, 0.5f);
+                            rt.anchorMax = new Vector2(0.5f, 0.5f);
+                            rt.pivot = new Vector2(0.5f, 0.5f);
+                            // Shrink the button
+                            rt.localScale = new Vector3(0.6f, 0.6f, 1f);
+                            // Play Again on top, Menu below
+                            float yOffset = isPlayAgain ? 45f : -45f;
+                            rt.anchoredPosition = new Vector2(0f, yOffset);
+                        }
+                        playAgainIndex++;
+                    }
+                }
                 else
                     child.gameObject.SetActive(false); // Hide submit/share/other buttons
             }
