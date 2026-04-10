@@ -99,18 +99,9 @@ public class Platform : MonoBehaviour {
                 audioSource.Play();
             }
 
-            // Flash golden platform white on super jump
+            // Super jump visual feedback
             if (isSuperJump)
-            {
-                StartCoroutine(SuperJumpFlash());
                 Score_Popup.Create(transform.position, "SUPER!", new Color(1f, 0.8f, 0f));
-            }
-            else
-            {
-                // Show floating score for normal jumps
-                int points = (int)(50 * Game_Controller.ScoreMultiplier);
-                Score_Popup.Create(transform.position, "+" + points, Color.white);
-            }
 
             // if gameobject has animation; Like spring, trampoline and etc...
             if (GetComponent<Animator>())
@@ -132,11 +123,4 @@ public class Platform : MonoBehaviour {
             GetComponent<Platform_Brown>().Deactive();
     }
 
-    IEnumerator SuperJumpFlash()
-    {
-        Color original = new Color(1f, 0.75f, 0f);
-        spriteRenderer.color = Color.white;
-        yield return new WaitForSeconds(0.1f);
-        spriteRenderer.color = original;
-    }
 }

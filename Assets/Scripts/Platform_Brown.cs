@@ -14,6 +14,14 @@ public class Platform_Brown : MonoBehaviour {
 
     public void Deactive()
     {
+        StartCoroutine(DelayedFall());
+    }
+
+    IEnumerator DelayedFall()
+    {
+        // Wait a short moment so the player's jump force applies before the platform falls
+        yield return new WaitForSeconds(0.15f);
+
         GetComponent<EdgeCollider2D>().enabled = false;
         GetComponent<PlatformEffector2D>().enabled = false;
 

@@ -334,10 +334,35 @@ public class Game_Controller : MonoBehaviour {
         // Show only play again and menu buttons
         Button_OnClick.Set_GameOverMenu(true);
 
+        // Move Play Again and Menu buttons to center of screen
+        RepositionGameOverButtons(Background_Canvas);
+
         // Enable animation
         Background_Canvas.GetComponent<Animator>().enabled = true;
 
         // Save file
         File_Manager.Save_Info();
+    }
+
+    void RepositionGameOverButtons(GameObject bgCanvas)
+    {
+        int btnIndex = 0;
+        for (int i = 1; i < 12 && i < bgCanvas.transform.childCount; i++)
+        {
+            Transform child = bgCanvas.transform.GetChild(i);
+            if (!child.gameObject.activeSelf) continue;
+
+            Button btn = child.GetComponent<Button>();
+            if (btn == null) continue;
+
+            RectTransform rect = child.GetComponent<RectTransform>();
+            rect.anchorMin = new Vector2(0.5f, 0.5f);
+            rect.anchorMax = new Vector2(0.5f, 0.5f);
+            rect.pivot = new Vector2(0.5f, 0.5f);
+            rect.sizeDelta = new Vector2(350, 90);
+            // Stack buttons vertically in center: first at +50, second at -60
+            rect.anchoredPosition = new Vector2(0, 50 - (btnIndex * 110));
+            btnIndex++;
+        }
     }
 }

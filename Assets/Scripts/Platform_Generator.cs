@@ -103,9 +103,9 @@ public class Platform_Generator : MonoBehaviour {
             else // Create green platform
                 Platform = Instantiate(Platform_Green, Platform_Pos, Quaternion.identity);
 
-            // Spawn coin every 6 platforms (only on green/blue, not white/brown)
+            // Spawn coin every 2 platforms (only on green/blue, not white/brown)
             platformCount++;
-            if (platformCount % 6 == 0 && Rand_Platform != 2 && Rand_BrownPlatform != 1)
+            if (platformCount % 2 == 0 && Rand_Platform != 2 && Rand_BrownPlatform != 1)
             {
                 float coinY = Platform_Pos.y + 0.7f;
                 GameObject coin = new GameObject("Coin");
