@@ -214,8 +214,8 @@ public class Game_Controller : MonoBehaviour {
         PressToStartObj = new GameObject("PressToStart_Text");
         TextMesh textMesh = PressToStartObj.AddComponent<TextMesh>();
         textMesh.text = "Press to Start";
-        textMesh.fontSize = 30;
-        textMesh.characterSize = 0.05f;
+        textMesh.fontSize = 50;
+        textMesh.characterSize = 0.08f;
         textMesh.color = Color.white;
         textMesh.alignment = TextAlignment.Center;
         textMesh.anchor = TextAnchor.MiddleCenter;
