@@ -154,7 +154,7 @@ public class Button_OnClick : MonoBehaviour {
                             // Shrink the button
                             rt.localScale = new Vector3(0.6f, 0.6f, 1f);
                             // Play Again on top, Menu below
-                            float yOffset = isPlayAgain ? 120f : 30f;
+                            float yOffset = isPlayAgain ? 45f : -45f;
                             rt.anchoredPosition = new Vector2(0f, yOffset);
                         }
                         playAgainIndex++;
