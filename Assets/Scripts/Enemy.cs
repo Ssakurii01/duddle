@@ -81,48 +81,23 @@ public class Enemy : MonoBehaviour {
     void OnTriggerEnter2D(Collider2D other)
     {
         if (isDead) return;
-
-        // Check if it's the player (by tag or by name)
-        bool isPlayer = false;
-        try { isPlayer = other.CompareTag("Player"); } catch { }
-        if (!isPlayer) isPlayer = other.gameObject.name == "Doodler";
-        if (!isPlayer) return;
+        if (other.gameObject.name != "Doodler") return;
 
         Rigidbody2D playerRb = other.GetComponent<Rigidbody2D>();
         if (playerRb == null) return;
 
-        // Player is above enemy and falling down = stomp kill
-        if (other.transform.position.y > transform.position.y + 0.15f && playerRb.linearVelocity.y < 0)
-        {
-            // Kill enemy
-            isDead = true;
+        bool stomp = other.transform.position.y > transform.position.y + 0.15f && playerRb.linearVelocity.y < 0;
 
-            // Bounce player up
-            Vector2 vel = playerRb.linearVelocity;
-            vel.y = 12f;
-            playerRb.linearVelocity = vel;
+        Vector2 vel = playerRb.linearVelocity;
+        vel.y = stomp ? 12f : -5f;
+        playerRb.linearVelocity = vel;
 
-            // Spawn floating score
-            Score_Popup.Create(transform.position, "+" + bonusScore, new Color(1f, 0.3f, 0.3f));
+        if (!stomp) return;
 
-            // Add combo
-            Game_Controller.AddCombo();
-
-            // Squash and destroy animation
-            StartCoroutine(DeathAnimation());
-        }
-        else
-        {
-            // Player hit from side or below = game over
-            Game_Controller game = GameObject.Find("Game_Controller").GetComponent<Game_Controller>();
-            if (!game.Get_GameOver())
-            {
-                // Push player down
-                Vector2 vel = playerRb.linearVelocity;
-                vel.y = -5f;
-                playerRb.linearVelocity = vel;
-            }
-        }
+        isDead = true;
+        Score_Popup.Create(transform.position, "+" + bonusScore, new Color(1f, 0.3f, 0.3f));
+        Game_Controller.AddCombo();
+        StartCoroutine(DeathAnimation());
     }
 
     IEnumerator DeathAnimation()

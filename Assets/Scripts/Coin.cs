@@ -68,12 +68,7 @@ public class Coin : MonoBehaviour {
     void OnTriggerEnter2D(Collider2D other)
     {
         if (collected) return;
-
-        // Check if player
-        bool isPlayer = false;
-        try { isPlayer = other.CompareTag("Player"); } catch { }
-        if (!isPlayer) isPlayer = other.gameObject.name == "Doodler";
-        if (!isPlayer) return;
+        if (other.gameObject.name != "Doodler") return;
 
         collected = true;
 

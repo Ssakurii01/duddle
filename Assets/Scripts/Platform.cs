@@ -1,126 +1,103 @@
-using System.Collections;
-using System.Collections.Generic;
 using UnityEngine;
 
-public class Platform : MonoBehaviour {
-
+public class Platform : MonoBehaviour
+{
     public float Jump_Force = 10f;
-    private float Destroy_Distance;
-    private bool Create_NewPlatform = false;
 
-    private GameObject Game_Controller_Obj;
+    private float Destroy_Distance;
     private AudioSource audioSource;
     private EdgeCollider2D edgeCollider;
     private PlatformEffector2D platformEffector;
     private SpriteRenderer spriteRenderer;
-
-    // Super jump - random golden platform
     private bool isSuperJump = false;
 
-    // Use this for initialization
     void Start()
     {
-        Game_Controller_Obj = GameObject.Find("Game_Controller");
         audioSource = GetComponent<AudioSource>();
         edgeCollider = GetComponent<EdgeCollider2D>();
         platformEffector = GetComponent<PlatformEffector2D>();
         spriteRenderer = GetComponent<SpriteRenderer>();
 
-        // Set distance to destroy the platforms out of screen
-        Destroy_Distance = Game_Controller_Obj.GetComponent<Game_Controller>().Get_DestroyDistance();
-
-        // 1 in 7 chance to become a super jump golden platform (only green platforms)
-        if (!GetComponent<Platform_White>() && !GetComponent<Platform_Brown>() && !GetComponent<Platform_Blue>())
+        GameObject gc = GameObject.Find("Game_Controller");
+        if (gc != null)
         {
-            if (Random.Range(0, 7) == 0)
-            {
-                isSuperJump = true;
-                spriteRenderer.color = new Color(1f, 0.75f, 0f); // Bright golden color
-            }
+            Game_Controller ctrl = gc.GetComponent<Game_Controller>();
+            if (ctrl != null) Destroy_Distance = ctrl.Get_DestroyDistance();
+        }
+
+        // Only plain green platforms can roll into a golden Super Jump
+        if (GetComponent<Platform_White>() != null) return;
+        if (GetComponent<Platform_Brown>() != null) return;
+        if (GetComponent<Platform_Blue>() != null) return;
+
+        if (Random.Range(0, 7) == 0)
+        {
+            isSuperJump = true;
+            if (spriteRenderer != null) spriteRenderer.color = new Color(1f, 0.75f, 0f);
         }
     }
 
     void FixedUpdate()
     {
-        // Platform out of screen
-        if (transform.position.y - Camera.main.transform.position.y < Destroy_Distance)
+        if (Camera.main == null) return;
+        if (transform.position.y - Camera.main.transform.position.y >= Destroy_Distance) return;
+
+        if (edgeCollider != null) edgeCollider.enabled = false;
+        if (platformEffector != null) platformEffector.enabled = false;
+        if (spriteRenderer != null) spriteRenderer.enabled = false;
+
+        if (transform.childCount > 0)
         {
-            // Create new platform
-            if (name != "Platform_Brown(Clone)" && name != "Spring(Clone)" && name != "Trampoline(Clone)" && !Create_NewPlatform)
+            Transform child = transform.GetChild(0);
+            if (child.GetComponent<Platform>() != null)
             {
-                Game_Controller_Obj.GetComponent<Platform_Generator>().Generate_Platform(1);
-                Create_NewPlatform = true;
+                EdgeCollider2D childEdge = child.GetComponent<EdgeCollider2D>();
+                PlatformEffector2D childEffector = child.GetComponent<PlatformEffector2D>();
+                SpriteRenderer childSprite = child.GetComponent<SpriteRenderer>();
+                if (childEdge != null) childEdge.enabled = false;
+                if (childEffector != null) childEffector.enabled = false;
+                if (childSprite != null) childSprite.enabled = false;
             }
-            
-            // Deactive Collider and effector
-            edgeCollider.enabled = false;
-            platformEffector.enabled = false;
-            spriteRenderer.enabled = false;
 
-            // Deactive collider and effector if gameobject has child
-            if (transform.childCount > 0)
-            {
-                if(transform.GetChild(0).GetComponent<Platform>()) // if child is platform
-                {
-                    transform.GetChild(0).GetComponent<EdgeCollider2D>().enabled = false;
-                    transform.GetChild(0).GetComponent<PlatformEffector2D>().enabled = false;
-                    transform.GetChild(0).GetComponent<SpriteRenderer>().enabled = false;
-                }
-
-                // Destroy this platform if sound has finished
-                if ((audioSource == null || !audioSource.isPlaying) && !transform.GetChild(0).GetComponent<AudioSource>().isPlaying)
-                    Destroy(gameObject);
-            }
-            else
-            {
-                // Destroy this platform if sound has finished
-                if (audioSource == null || !audioSource.isPlaying)
-                    Destroy(gameObject);
-            }
+            AudioSource childAudio = child.GetComponent<AudioSource>();
+            bool myDone = audioSource == null || !audioSource.isPlaying;
+            bool childDone = childAudio == null || !childAudio.isPlaying;
+            if (myDone && childDone) Destroy(gameObject);
+            return;
         }
+
+        if (audioSource == null || !audioSource.isPlaying)
+            Destroy(gameObject);
     }
 
     void OnCollisionEnter2D(Collision2D Other)
     {
         Rigidbody2D Rigid = Other.collider.GetComponent<Rigidbody2D>();
+        if (Rigid == null || Other.transform.position.y <= transform.position.y) return;
 
-        // Player must be landing on top for it to count
-        if (Rigid != null && Other.transform.position.y > transform.position.y)
+        Vector2 Force = Rigid.linearVelocity;
+        Force.y = isSuperJump ? Jump_Force * 3f : Jump_Force;
+        Rigid.linearVelocity = Force;
+
+        if (audioSource != null && audioSource.clip != null)
         {
-            Vector2 Force = Rigid.linearVelocity;
-            float jumpForce = isSuperJump ? Jump_Force * 3f : Jump_Force;
-            Force.y = jumpForce;
-            Rigid.linearVelocity = Force;
-
-            // Force 2D sound and play jump sound
-            if (audioSource != null && audioSource.clip != null) {
-                audioSource.spatialBlend = 0f;
-                audioSource.Stop();
-                audioSource.Play();
-            }
-
-            // Super jump visual feedback
-            if (isSuperJump)
-                Score_Popup.Create(transform.position, "SUPER!", new Color(1f, 0.8f, 0f));
-
-            // if gameobject has animation; Like spring, trampoline and etc...
-            if (GetComponent<Animator>())
-                GetComponent<Animator>().SetBool("Active", true);
-
-            // Add combo hit
-            Game_Controller.AddCombo();
-
-            // Check platform type
-            Platform_Type();
+            audioSource.spatialBlend = 0f;
+            audioSource.Stop();
+            audioSource.Play();
         }
-    }
 
-    void Platform_Type()
-    {
-        if (GetComponent<Platform_White>())
-            GetComponent<Platform_White>().Deactive();
-        else if (GetComponent<Platform_Brown>())
-            GetComponent<Platform_Brown>().Deactive();
-    }
+        if (isSuperJump)
+            Score_Popup.Create(transform.position, "SUPER!", new Color(1f, 0.8f, 0f));
 
+        Animator anim = GetComponent<Animator>();
+        if (anim != null) anim.SetBool("Active", true);
+
+        Game_Controller.AddCombo();
+
+        Platform_White white = GetComponent<Platform_White>();
+        if (white != null) { white.Deactive(); return; }
+
+        Platform_Brown brown = GetComponent<Platform_Brown>();
+        if (brown != null) brown.Deactive();
+    }
 }

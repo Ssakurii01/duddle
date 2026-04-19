@@ -1,5 +1,3 @@
-using System.Collections;
-using System.Collections.Generic;
 using UnityEngine;
 
 public class Camera_Follow : MonoBehaviour {
@@ -30,11 +28,11 @@ public class Camera_Follow : MonoBehaviour {
         }
     }
 
-    // Update is called once per frame
     void Update()
     {
-        // Check game over
-        Game_Over = Game_Controller.GetComponent<Game_Controller>().Get_GameOver();
+        if (Game_Controller == null) return;
+        Game_Controller gc = Game_Controller.GetComponent<Game_Controller>();
+        if (gc != null) Game_Over = gc.Get_GameOver();
     }
 
     void FixedUpdate()

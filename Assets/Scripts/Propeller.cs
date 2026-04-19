@@ -1,6 +1,4 @@
-﻿using System.Collections;
-using System.Collections.Generic;
-using UnityEngine;
+﻿using UnityEngine;
 
 public class Propeller : MonoBehaviour {
 
@@ -10,13 +8,13 @@ public class Propeller : MonoBehaviour {
 
     private GameObject Game_Controller;
 
-    // Use this for initialization
     void Start()
     {
         Game_Controller = GameObject.Find("Game_Controller");
+        if (Game_Controller == null) return;
 
-        // Set distance to destroy the propeller out of screen
-        Destroy_Distance = Game_Controller.GetComponent<Game_Controller>().Get_DestroyDistance();
+        Game_Controller gc = Game_Controller.GetComponent<Game_Controller>();
+        if (gc != null) Destroy_Distance = gc.Get_DestroyDistance();
     }
 
 	void FixedUpdate () 
