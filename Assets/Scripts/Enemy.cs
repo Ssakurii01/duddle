@@ -96,6 +96,9 @@ public class Enemy : MonoBehaviour {
 
         isDead = true;
         Score_Popup.Create(transform.position, "+" + bonusScore, new Color(1f, 0.3f, 0.3f));
+        Jump_Particles.Burst(transform.position, new Color(1f, 0.5f, 0.5f, 0.9f), 10);
+        Camera_Shake.Shake(0.18f, 0.2f);
+        other.gameObject.SendMessage("OnPlatformLand", SendMessageOptions.DontRequireReceiver);
         Game_Controller.AddCombo();
         StartCoroutine(DeathAnimation());
     }

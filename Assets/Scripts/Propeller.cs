@@ -1,7 +1,7 @@
-﻿using UnityEngine;
+using UnityEngine;
 
-public class Propeller : MonoBehaviour {
-
+public class Propeller : MonoBehaviour
+{
     private bool Attach = false;
     private bool Fall = false;
     private float Destroy_Distance;
@@ -17,61 +17,100 @@ public class Propeller : MonoBehaviour {
         if (gc != null) Destroy_Distance = gc.Get_DestroyDistance();
     }
 
-	void FixedUpdate () 
+    void FixedUpdate()
     {
-        // Propeller fall
-        if(Fall)
-        {
-            GetComponent<AudioSource>().Stop();
-            transform.Rotate(new Vector3(0, 0, -3.5f));
-            transform.position -= new Vector3(0, 0.3f, 0);
-            
-            // Destroy propeller
-            if (transform.position.y - Camera.main.transform.position.y < Destroy_Distance)
-                Destroy(gameObject);
-        }
-	}
+        if (!Fall) return;
+
+        GetComponent<AudioSource>().Stop();
+        transform.Rotate(new Vector3(0, 0, -3.5f));
+        transform.position -= new Vector3(0, 0.3f, 0);
+
+        if (transform.position.y - Camera.main.transform.position.y < Destroy_Distance)
+            Destroy(gameObject);
+    }
 
     void OnCollisionEnter2D(Collision2D Other)
     {
-        if (Other.gameObject.tag == "Player" && !Attach)
+        if (Other.gameObject.tag != "Player" || Attach) return;
+        if (Other.transform.childCount != 0) return;
+
+        // Parent propeller to player
+        transform.parent = Other.transform;
+        transform.localPosition = new Vector3(0, -0.02f, 0);
+        GetComponent<BoxCollider2D>().enabled = false;
+
+        Rigidbody2D Rigid = Other.collider.GetComponent<Rigidbody2D>();
+        if (Rigid != null)
         {
-            if (Other.transform.childCount == 0)
-            {
-                // Set propeller parent
-                transform.parent = Other.transform;
-                transform.localPosition = new Vector3(0, -0.02f, 0);
-                GetComponent<BoxCollider2D>().enabled = false;
+            Vector2 Force = Rigid.linearVelocity;
+            Force.y = 80f;
+            Rigid.linearVelocity = Force;
 
-                // Add force to up
-                Rigidbody2D Rigid = Other.collider.GetComponent<Rigidbody2D>();
+            GetComponent<AudioSource>().Play();
 
-                if (Rigid != null)
-                {
-                    Vector2 Force = Rigid.linearVelocity;
-                    Force.y = 80f;
-                    Rigid.linearVelocity = Force;
+            Animator anim = GetComponent<Animator>();
+            if (anim != null) anim.SetBool("Active", true);
 
-                    // Play propeller sound
-                    GetComponent<AudioSource>().Play();
+            SpriteRenderer sr = GetComponent<SpriteRenderer>();
+            if (sr != null) sr.sortingOrder = 12;
 
-                    // Set propeller animation
-                    GetComponent<Animator>().SetBool("Active", true);
-
-                    // Propeller sprite send to front
-                    GetComponent<SpriteRenderer>().sortingOrder = 12;
-                }
-
-                Attach = true;
-            }
+            AttachTrail(Other.gameObject);
         }
+
+        Attach = true;
     }
 
     public void Set_Fall(GameObject Player)
     {
         Fall = true;
 
-        // Active player colider
-        Player.GetComponent<BoxCollider2D>().enabled = true;
+        BoxCollider2D box = Player.GetComponent<BoxCollider2D>();
+        if (box != null) box.enabled = true;
+
+        RemoveTrail(Player);
+    }
+
+    static void AttachTrail(GameObject player)
+    {
+        TrailRenderer trail = player.GetComponent<TrailRenderer>();
+        if (trail == null) trail = player.AddComponent<TrailRenderer>();
+
+        trail.enabled = true;
+        trail.time = 0.45f;
+        trail.startWidth = 0.55f;
+        trail.endWidth = 0.02f;
+        trail.minVertexDistance = 0.05f;
+        trail.sortingOrder = 3;  // behind the player (player is 4+)
+        trail.numCapVertices = 4;
+
+        Gradient g = new Gradient();
+        g.SetKeys(
+            new GradientColorKey[]
+            {
+                new GradientColorKey(new Color(1f, 1f, 1f), 0f),
+                new GradientColorKey(new Color(0.7f, 0.9f, 1f), 1f)
+            },
+            new GradientAlphaKey[]
+            {
+                new GradientAlphaKey(0.85f, 0f),
+                new GradientAlphaKey(0f, 1f)
+            }
+        );
+        trail.colorGradient = g;
+
+        if (trail.material == null || trail.material.shader == null)
+        {
+            Shader sh = Shader.Find("Sprites/Default");
+            if (sh == null) sh = Shader.Find("Unlit/Transparent");
+            if (sh != null) trail.material = new Material(sh);
+        }
+
+        trail.Clear();
+    }
+
+    static void RemoveTrail(GameObject player)
+    {
+        TrailRenderer trail = player.GetComponent<TrailRenderer>();
+        if (trail != null) trail.enabled = false;
     }
 }

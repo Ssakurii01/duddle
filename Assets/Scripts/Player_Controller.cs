@@ -10,6 +10,10 @@ public class Player_Controller : MonoBehaviour
     private Vector3 Player_LocalScale;
     private float Movement = 0;
 
+    // Squash & stretch
+    private float squashImpulse = 0f;   // set >0 by external triggers for a landing squash
+    private float facingSign = 1f;
+
     void Awake()
     {
         Rigid = GetComponent<Rigidbody2D>();
@@ -19,6 +23,8 @@ public class Player_Controller : MonoBehaviour
     void Start()
     {
         Player_LocalScale = transform.localScale;
+        facingSign = Mathf.Sign(Player_LocalScale.x);
+        if (facingSign == 0f) facingSign = 1f;
 
         BoxCollider2D box = GetComponent<BoxCollider2D>();
         if (box != null) box.enabled = true;
@@ -29,15 +35,17 @@ public class Player_Controller : MonoBehaviour
 
     void Update()
     {
-        if (!Game_Controller.Game_Started) return;
+        if (!Game_Controller.Game_Started)
+        {
+            ApplyScale(1f, 1f);
+            return;
+        }
 
         Movement = Input.GetAxisRaw("Horizontal") * Movement_Speed;
+        if (Movement > 0.01f) facingSign = 1f;
+        else if (Movement < -0.01f) facingSign = -1f;
 
-        if (Movement != 0)
-        {
-            float sign = Mathf.Sign(Movement);
-            transform.localScale = new Vector3(sign * Player_LocalScale.x, Player_LocalScale.y, Player_LocalScale.z);
-        }
+        ApplyScaleFromVelocity();
     }
 
     void FixedUpdate()
@@ -61,6 +69,41 @@ public class Player_Controller : MonoBehaviour
         }
 
         WrapAroundScreen();
+    }
+
+    void ApplyScaleFromVelocity()
+    {
+        float vy = Rigid != null ? Rigid.linearVelocity.y : 0f;
+        // Velocity stretch: up fast = tall, down fast = slightly squat
+        float stretch = Mathf.Clamp(vy / 18f, -0.25f, 0.35f);
+
+        float scaleY = 1f + stretch;
+        float scaleX = 1f - stretch * 0.4f;
+
+        // Landing impulse pop: strong squat that decays
+        if (squashImpulse > 0f)
+        {
+            scaleY *= 1f - squashImpulse * 0.35f;
+            scaleX *= 1f + squashImpulse * 0.45f;
+            squashImpulse = Mathf.Max(0f, squashImpulse - Time.deltaTime * 6f);
+        }
+
+        ApplyScale(scaleX, scaleY);
+    }
+
+    void ApplyScale(float sx, float sy)
+    {
+        transform.localScale = new Vector3(
+            facingSign * Mathf.Abs(Player_LocalScale.x) * sx,
+            Player_LocalScale.y * sy,
+            Player_LocalScale.z
+        );
+    }
+
+    // Called by Platform when the player lands (via SendMessage).
+    void OnPlatformLand()
+    {
+        squashImpulse = 1f;
     }
 
     void WrapAroundScreen()

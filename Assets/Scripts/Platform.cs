@@ -86,6 +86,16 @@ public class Platform : MonoBehaviour
             audioSource.Play();
         }
 
+        // Juice: dust burst at landing point
+        Vector3 burstPos = new Vector3(Other.transform.position.x, transform.position.y + 0.15f, 0);
+        Jump_Particles.Burst(burstPos, isSuperJump ? 12 : 6);
+
+        // Juice: landing squash on player
+        Other.gameObject.SendMessage("OnPlatformLand", SendMessageOptions.DontRequireReceiver);
+
+        // Juice: screen shake — tiny on normal jump, meaty on super
+        Camera_Shake.Shake(isSuperJump ? 0.3f : 0.06f, isSuperJump ? 0.35f : 0.05f);
+
         if (isSuperJump)
             Score_Popup.Create(transform.position, "SUPER!", new Color(1f, 0.8f, 0f));
 

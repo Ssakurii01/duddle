@@ -1,3 +1,4 @@
+using System.Collections;
 using UnityEngine;
 using UnityEngine.SceneManagement;
 using UnityEngine.UI;
@@ -18,17 +19,28 @@ public class Game_Controller : MonoBehaviour
 
     private GameObject Player;
     private int Score;
+    private float displayScore = 0f;
     private float Max_Height = 0;
     private Vector3 Top_Left;
     private Vector3 Camera_Pos;
     private bool Game_Over = false;
+    private bool Countdown_Started = false;
 
     private Text Txt_Combo;
     private float comboDisplayTimer = 0f;
 
+    // Score text pulse (for milestones + high-combo reactions)
+    private Vector3 scoreBaseScale = Vector3.one;
+    private float scoreKick = 0f;
+
+    // Milestones already celebrated (so each fires once per run)
+    private readonly int[] milestones = { 1000, 2500, 5000, 10000, 20000, 50000 };
+    private int milestoneIndex = 0;
+
     void Awake()
     {
         Game_Started = false;
+        Countdown_Started = false;
         ComboCount = 0;
         ScoreMultiplier = 1f;
         CoinScore = 0;
@@ -45,6 +57,8 @@ public class Game_Controller : MonoBehaviour
         PositionScoreText();
         Create_ComboText();
 
+        scoreBaseScale = Txt_Score.rectTransform.localScale;
+
         Time.timeScale = 0f;
     }
 
@@ -52,10 +66,15 @@ public class Game_Controller : MonoBehaviour
     {
         bool confirmPressed = Input.GetKeyDown(KeyCode.Space) || Input.GetKeyDown(KeyCode.JoystickButton0);
 
-        if (!Game_Started && confirmPressed)
+        // Start: trigger countdown instead of starting immediately
+        if (!Game_Started && !Countdown_Started && confirmPressed)
         {
-            Game_Started = true;
-            Time.timeScale = 1f;
+            Countdown_Started = true;
+            Start_Countdown.Play(this, () =>
+            {
+                Game_Started = true;
+                Time.timeScale = 1f;
+            });
         }
 
         if (Game_Over && confirmPressed)
@@ -65,7 +84,17 @@ public class Game_Controller : MonoBehaviour
         }
 
         Score = (int)(Max_Height * 50 * ScoreMultiplier) + CoinScore;
-        Txt_Score.text = "Score : " + Score;
+
+        // Milestone flash — only when game is active
+        if (Game_Started && !Game_Over) CheckMilestones();
+
+        displayScore = Mathf.Lerp(displayScore, Score, Time.unscaledDeltaTime * 8f);
+        if (Mathf.Abs(Score - displayScore) <= 1f) displayScore = Score;
+        Txt_Score.text = "Score : " + Mathf.RoundToInt(displayScore);
+
+        // Ease the score scale back to 1 after kicks
+        scoreKick = Mathf.Lerp(scoreKick, 0f, Time.unscaledDeltaTime * 8f);
+        Txt_Score.rectTransform.localScale = scoreBaseScale * (1f + scoreKick);
 
         UpdateComboText();
     }
@@ -80,31 +109,70 @@ public class Game_Controller : MonoBehaviour
         if (Player.transform.position.y - Camera.main.transform.position.y < Get_DestroyDistance())
         {
             GetComponent<AudioSource>().Play();
+            Camera_Shake.Shake(0.6f, 0.5f);
             Set_GameOver();
             Game_Over = true;
         }
     }
 
-    public bool Get_GameOver()
-    {
-        return Game_Over;
-    }
+    public bool Get_GameOver() => Game_Over;
+    public float Get_DestroyDistance() => Camera_Pos.y + Top_Left.y;
 
-    public float Get_DestroyDistance()
-    {
-        return Camera_Pos.y + Top_Left.y;
-    }
-
-    public static void AddCoinScore(int value)
-    {
-        CoinScore += value;
-    }
+    public static void AddCoinScore(int value) { CoinScore += value; }
 
     public static void AddCombo()
     {
         ComboCount++;
         ScoreMultiplier = ComboCount >= 3 ? 1f + (ComboCount - 2) * 0.5f : 1f;
     }
+
+    // ----- Milestones -----
+
+    void CheckMilestones()
+    {
+        while (milestoneIndex < milestones.Length && Score >= milestones[milestoneIndex])
+        {
+            TriggerMilestone(milestones[milestoneIndex]);
+            milestoneIndex++;
+        }
+    }
+
+    void TriggerMilestone(int value)
+    {
+        scoreKick = 0.6f;
+        Camera_Shake.Shake(0.25f, 0.2f);
+
+        // Gold banner at player position
+        if (Player != null)
+        {
+            Score_Popup.Create(
+                Player.transform.position + new Vector3(0, 1.5f, 0),
+                value.ToString("N0") + "!",
+                new Color(1f, 0.85f, 0.2f)
+            );
+            Jump_Particles.Burst(Player.transform.position, new Color(1f, 0.85f, 0.2f, 0.9f), 14);
+        }
+
+        // Gold flash on score text
+        StartCoroutine(FlashScoreGold());
+    }
+
+    IEnumerator FlashScoreGold()
+    {
+        Color original = Txt_Score.color;
+        Color gold = new Color(1f, 0.85f, 0.2f);
+
+        float t = 0f;
+        while (t < 0.45f)
+        {
+            t += Time.unscaledDeltaTime;
+            Txt_Score.color = Color.Lerp(gold, original, t / 0.45f);
+            yield return null;
+        }
+        Txt_Score.color = original;
+    }
+
+    // ----- UI setup -----
 
     void ConfigureScoreCanvas()
     {
@@ -192,21 +260,144 @@ public class Game_Controller : MonoBehaviour
             bgCanvas.transform.GetChild(i).gameObject.SetActive(false);
     }
 
+    // ----- Game Over -----
+
     void Set_GameOver()
     {
-        if (Data_Manager.Get_HighScore() < Score)
-            Data_Manager.Set_HighScore(Score);
+        bool newHighScore = Data_Manager.Get_HighScore() < Score;
+        if (newHighScore) Data_Manager.Set_HighScore(Score);
 
-        GameObject Background_Canvas = GameObject.Find("Background_Canvas");
-        if (Background_Canvas == null) return;
+        GameObject bgCanvas = GameObject.Find("Background_Canvas");
+        if (bgCanvas == null) return;
 
         Button_OnClick.Set_GameOverMenu(true);
-        RepositionGameOverButtons(Background_Canvas);
+        RepositionGameOverButtons(bgCanvas);
 
-        Animator anim = Background_Canvas.GetComponent<Animator>();
+        Animator anim = bgCanvas.GetComponent<Animator>();
         if (anim != null) anim.enabled = true;
 
         File_Manager.Save_Info();
+
+        StartCoroutine(GameOverSequence(bgCanvas, newHighScore, Score));
+    }
+
+    IEnumerator GameOverSequence(GameObject bgCanvas, bool newHighScore, int finalScore)
+    {
+        // 1. Collect the active buttons and remember their target scales
+        var buttons = new System.Collections.Generic.List<(RectTransform rt, Vector3 target)>();
+        for (int i = 1; i < bgCanvas.transform.childCount; i++)
+        {
+            Transform child = bgCanvas.transform.GetChild(i);
+            if (!child.gameObject.activeSelf) continue;
+            if (child.GetComponent<Button>() == null) continue;
+
+            RectTransform rt = child.GetComponent<RectTransform>();
+            buttons.Add((rt, rt.localScale));
+            rt.localScale = Vector3.zero;
+        }
+
+        // 2. Brief dramatic pause
+        yield return new WaitForSecondsRealtime(0.35f);
+
+        // 3. Optionally celebrate a new high score first
+        if (newHighScore) yield return StartCoroutine(ShowHighScoreCelebration());
+
+        // 4. Score count-up on Txt_GameOverScore (if wired)
+        if (Txt_GameOverScore != null && Txt_GameOverScore.gameObject.activeInHierarchy)
+        {
+            float t = 0f;
+            float duration = 0.9f;
+            while (t < duration)
+            {
+                t += Time.unscaledDeltaTime;
+                int v = Mathf.RoundToInt(Mathf.Lerp(0, finalScore, t / duration));
+                Txt_GameOverScore.text = v.ToString();
+                yield return null;
+            }
+            Txt_GameOverScore.text = finalScore.ToString();
+        }
+
+        if (Txt_GameOverHighsocre != null)
+            Txt_GameOverHighsocre.text = Data_Manager.Get_HighScore().ToString();
+
+        // 5. Pop buttons in with a small bounce
+        float b = 0f;
+        float bDur = 0.45f;
+        while (b < bDur)
+        {
+            b += Time.unscaledDeltaTime;
+            float p = Mathf.Clamp01(b / bDur);
+            // easeOutBack-ish
+            float scale = EaseOutBack(p);
+            foreach (var pair in buttons)
+                pair.rt.localScale = Vector3.Lerp(Vector3.zero, pair.target, scale);
+            yield return null;
+        }
+        foreach (var pair in buttons) pair.rt.localScale = pair.target;
+    }
+
+    IEnumerator ShowHighScoreCelebration()
+    {
+        // Banner text created on the Background_Canvas
+        GameObject bannerObj = new GameObject("HS_Banner");
+        Canvas bg = GameObject.Find("Background_Canvas")?.GetComponent<Canvas>();
+        if (bg != null) bannerObj.transform.SetParent(bg.transform, false);
+
+        Text banner = bannerObj.AddComponent<Text>();
+        banner.font = Txt_Score.font;
+        banner.text = "NEW HIGH SCORE!";
+        banner.fontSize = 44;
+        banner.color = new Color(1f, 0.85f, 0.1f);
+        banner.alignment = TextAnchor.MiddleCenter;
+        banner.raycastTarget = false;
+        banner.horizontalOverflow = HorizontalWrapMode.Overflow;
+        banner.verticalOverflow = VerticalWrapMode.Overflow;
+
+        RectTransform brt = banner.rectTransform;
+        brt.anchorMin = new Vector2(0.5f, 0.5f);
+        brt.anchorMax = new Vector2(0.5f, 0.5f);
+        brt.pivot = new Vector2(0.5f, 0.5f);
+        brt.sizeDelta = new Vector2(900, 120);
+        brt.anchoredPosition = new Vector2(0, 180);
+        brt.localScale = Vector3.zero;
+
+        // Confetti at the player's last known position — multiple color bursts
+        Camera_Shake.Shake(0.3f, 0.25f);
+        SpawnConfetti(Player != null ? Player.transform.position : Vector3.zero);
+
+        float t = 0f;
+        float pop = 0.5f;
+        while (t < pop)
+        {
+            t += Time.unscaledDeltaTime;
+            brt.localScale = Vector3.one * EaseOutBack(t / pop);
+            yield return null;
+        }
+        brt.localScale = Vector3.one;
+
+        yield return new WaitForSecondsRealtime(0.8f);
+    }
+
+    void SpawnConfetti(Vector3 center)
+    {
+        Color[] colors = new Color[]
+        {
+            new Color(1f, 0.3f, 0.3f, 0.95f),
+            new Color(0.3f, 1f, 0.4f, 0.95f),
+            new Color(0.3f, 0.5f, 1f, 0.95f),
+            new Color(1f, 0.9f, 0.2f, 0.95f),
+            new Color(1f, 0.4f, 0.9f, 0.95f),
+        };
+        for (int i = 0; i < colors.Length; i++)
+            Jump_Particles.Burst(center, colors[i], 10);
+    }
+
+    static float EaseOutBack(float p)
+    {
+        const float c1 = 1.70158f;
+        const float c3 = c1 + 1f;
+        float p1 = p - 1f;
+        return 1f + c3 * p1 * p1 * p1 + c1 * p1 * p1;
     }
 
     void RepositionGameOverButtons(GameObject bgCanvas)

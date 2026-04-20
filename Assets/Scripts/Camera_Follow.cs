@@ -9,15 +9,10 @@ public class Camera_Follow : MonoBehaviour {
 
     private float Time_ToDown = 0;
 
-    // Screen tint — intensifies with height
-    private Color startColor;
-    private Color dangerColor = new Color(0.4f, 0.1f, 0.15f); // Dark red tint
-
     // Use this for initialization
     void Start()
     {
         Game_Controller = GameObject.Find("Game_Controller");
-        startColor = Camera.main.backgroundColor;
 
         // Auto-find the spawned Doodler if Target is not set
         if (Target == null)
@@ -37,22 +32,17 @@ public class Camera_Follow : MonoBehaviour {
 
     void FixedUpdate()
     {
-        // Move camera to down if game over
-        if (Game_Over)
-        {
-            if(Time.time < Time_ToDown + 4f)
-                transform.position -= new Vector3(0, 1f, 0);
-            else
-            {
-                // Delete player and all objects
-                GameObject Player = GameObject.FindGameObjectWithTag("Player");
-                GameObject[] Objects = GameObject.FindGameObjectsWithTag("Object");
+        // On game over: freeze the camera and clean up props after a short delay
+        // so the game-over card + sky stay stable instead of rewinding through altitudes.
+        if (!Game_Over) return;
 
-                Destroy(Player);
-                foreach (GameObject Obj in Objects)
-                    Destroy(Obj);
-            }
-        }
+        if (Time.time < Time_ToDown + 4f) return;
+
+        GameObject Player = GameObject.FindGameObjectWithTag("Player");
+        if (Player != null) Destroy(Player);
+
+        foreach (GameObject obj in GameObject.FindGameObjectsWithTag("Object"))
+            Destroy(obj);
     }
 
 	void LateUpdate () 
@@ -68,13 +58,6 @@ public class Camera_Follow : MonoBehaviour {
             }
 
             Time_ToDown = Time.time;
-        }
-
-        // Screen tint — gradually shifts to danger color as player climbs
-        if (Target != null && !Game_Over)
-        {
-            float heightFactor = Mathf.Clamp(Target.position.y / 300f, 0f, 1f);
-            Camera.main.backgroundColor = Color.Lerp(startColor, dangerColor, heightFactor);
         }
 	}
 

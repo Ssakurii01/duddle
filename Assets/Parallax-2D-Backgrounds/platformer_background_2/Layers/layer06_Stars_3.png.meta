@@ -1,0 +1,689 @@
+fileFormatVersion: 2
+guid: dcceb1e9ac041f946949074c0942281c
+TextureImporter:
+  internalIDToNameTable:
+  - first:
+      213: 6176130251338552060
+    second: layer06_Stars_3_0
+  - first:
+      213: -4235498600101157036
+    second: layer06_Stars_3_1
+  - first:
+      213: 6562618306627367351
+    second: layer06_Stars_3_2
+  - first:
+      213: -3078490344741911258
+    second: layer06_Stars_3_3
+  - first:
+      213: 1107170767577276058
+    second: layer06_Stars_3_4
+  - first:
+      213: -1378029826817242495
+    second: layer06_Stars_3_5
+  - first:
+      213: -6996165502684305646
+    second: layer06_Stars_3_6
+  - first:
+      213: -5226339186194800478
+    second: layer06_Stars_3_7
+  - first:
+      213: -8404316763587794537
+    second: layer06_Stars_3_8
+  - first:
+      213: -2486707417786760263
+    second: layer06_Stars_3_9
+  - first:
+      213: -2009966280578062893
+    second: layer06_Stars_3_10
+  - first:
+      213: -1271137063171737116
+    second: layer06_Stars_3_11
+  - first:
+      213: -8038908234356044162
+    second: layer06_Stars_3_12
+  - first:
+      213: -5437436551283023384
+    second: layer06_Stars_3_13
+  - first:
+      213: 8091770216032786344
+    second: layer06_Stars_3_14
+  - first:
+      213: 8022147233703266255
+    second: layer06_Stars_3_15
+  - first:
+      213: 9014413818221694108
+    second: layer06_Stars_3_16
+  - first:
+      213: -5870612032939210229
+    second: layer06_Stars_3_17
+  - first:
+      213: -7840661943789993852
+    second: layer06_Stars_3_18
+  - first:
+      213: 7407267935885653785
+    second: layer06_Stars_3_19
+  - first:
+      213: 1885727332445987986
+    second: layer06_Stars_3_20
+  externalObjects: {}
+  serializedVersion: 13
+  mipmaps:
+    mipMapMode: 0
+    enableMipMap: 0
+    sRGBTexture: 1
+    linearTexture: 0
+    fadeOut: 0
+    borderMipMap: 0
+    mipMapsPreserveCoverage: 0
+    alphaTestReferenceValue: 0.5
+    mipMapFadeDistanceStart: 1
+    mipMapFadeDistanceEnd: 3
+  bumpmap:
+    convertToNormalMap: 0
+    externalNormalMap: 0
+    heightScale: 0.25
+    normalMapFilter: 0
+    flipGreenChannel: 0
+  isReadable: 0
+  streamingMipmaps: 0
+  streamingMipmapsPriority: 0
+  vTOnly: 0
+  ignoreMipmapLimit: 0
+  grayScaleToAlpha: 0
+  generateCubemap: 6
+  cubemapConvolution: 0
+  seamlessCubemap: 0
+  textureFormat: 1
+  maxTextureSize: 2048
+  textureSettings:
+    serializedVersion: 2
+    filterMode: 1
+    aniso: 1
+    mipBias: 0
+    wrapU: 1
+    wrapV: 1
+    wrapW: 1
+  nPOTScale: 0
+  lightmap: 0
+  compressionQuality: 50
+  spriteMode: 2
+  spriteExtrude: 1
+  spriteMeshType: 1
+  alignment: 0
+  spritePivot: {x: 0.5, y: 0.5}
+  spritePixelsToUnits: 100
+  spriteBorder: {x: 0, y: 0, z: 0, w: 0}
+  spriteGenerateFallbackPhysicsShape: 1
+  alphaUsage: 1
+  alphaIsTransparency: 1
+  spriteTessellationDetail: -1
+  textureType: 8
+  textureShape: 1
+  singleChannelComponent: 0
+  flipbookRows: 1
+  flipbookColumns: 1
+  maxTextureSizeSet: 0
+  compressionQualitySet: 0
+  textureFormatSet: 0
+  ignorePngGamma: 0
+  applyGammaDecoding: 0
+  swizzle: 50462976
+  cookieLightType: 0
+  platformSettings:
+  - serializedVersion: 4
+    buildTarget: DefaultTexturePlatform
+    maxTextureSize: 2048
+    resizeAlgorithm: 0
+    textureFormat: -1
+    textureCompression: 1
+    compressionQuality: 50
+    crunchedCompression: 0
+    allowsAlphaSplitting: 0
+    overridden: 0
+    ignorePlatformSupport: 0
+    androidETC2FallbackOverride: 0
+    forceMaximumCompressionQuality_BC6H_BC7: 0
+  - serializedVersion: 4
+    buildTarget: Standalone
+    maxTextureSize: 2048
+    resizeAlgorithm: 0
+    textureFormat: -1
+    textureCompression: 1
+    compressionQuality: 50
+    crunchedCompression: 0
+    allowsAlphaSplitting: 0
+    overridden: 0
+    ignorePlatformSupport: 0
+    androidETC2FallbackOverride: 0
+    forceMaximumCompressionQuality_BC6H_BC7: 0
+  - serializedVersion: 4
+    buildTarget: Android
+    maxTextureSize: 2048
+    resizeAlgorithm: 0
+    textureFormat: -1
+    textureCompression: 1
+    compressionQuality: 50
+    crunchedCompression: 0
+    allowsAlphaSplitting: 0
+    overridden: 0
+    ignorePlatformSupport: 0
+    androidETC2FallbackOverride: 0
+    forceMaximumCompressionQuality_BC6H_BC7: 0
+  - serializedVersion: 4
+    buildTarget: WebGL
+    maxTextureSize: 2048
+    resizeAlgorithm: 0
+    textureFormat: -1
+    textureCompression: 1
+    compressionQuality: 50
+    crunchedCompression: 0
+    allowsAlphaSplitting: 0
+    overridden: 0
+    ignorePlatformSupport: 0
+    androidETC2FallbackOverride: 0
+    forceMaximumCompressionQuality_BC6H_BC7: 0
+  spriteSheet:
+    serializedVersion: 2
+    sprites:
+    - serializedVersion: 2
+      name: layer06_Stars_3_0
+      rect:
+        serializedVersion: 2
+        x: 65
+        y: 913
+        width: 127
+        height: 127
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: cf21495bdb506b550800000000000000
+      internalID: 6176130251338552060
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: layer06_Stars_3_1
+      rect:
+        serializedVersion: 2
+        x: 264
+        y: 991
+        width: 125
+        height: 89
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 4576e4eb67c7835c0800000000000000
+      internalID: -4235498600101157036
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: layer06_Stars_3_2
+      rect:
+        serializedVersion: 2
+        x: 830
+        y: 940
+        width: 115
+        height: 115
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 7b1fff2649a131b50800000000000000
+      internalID: 6562618306627367351
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: layer06_Stars_3_3
+      rect:
+        serializedVersion: 2
+        x: 1275
+        y: 921
+        width: 115
+        height: 115
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 625403d87510745d0800000000000000
+      internalID: -3078490344741911258
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: layer06_Stars_3_4
+      rect:
+        serializedVersion: 2
+        x: 556
+        y: 817
+        width: 137
+        height: 137
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: a9ed32372f57d5f00800000000000000
+      internalID: 1107170767577276058
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: layer06_Stars_3_5
+      rect:
+        serializedVersion: 2
+        x: 980
+        y: 856
+        width: 115
+        height: 115
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 18a4aa27c2140ece0800000000000000
+      internalID: -1378029826817242495
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: layer06_Stars_3_6
+      rect:
+        serializedVersion: 2
+        x: 1202
+        y: 757
+        width: 143
+        height: 143
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 217e8a6ea80a8ee90800000000000000
+      internalID: -6996165502684305646
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: layer06_Stars_3_7
+      rect:
+        serializedVersion: 2
+        x: 22
+        y: 690
+        width: 116
+        height: 115
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 2a0a72353305877b0800000000000000
+      internalID: -5226339186194800478
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: layer06_Stars_3_8
+      rect:
+        serializedVersion: 2
+        x: 309
+        y: 701
+        width: 115
+        height: 115
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 7992d767e6edd5b80800000000000000
+      internalID: -8404316763587794537
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: layer06_Stars_3_9
+      rect:
+        serializedVersion: 2
+        x: 501
+        y: 652
+        width: 127
+        height: 127
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 9b3cd7657c07d7dd0800000000000000
+      internalID: -2486707417786760263
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: layer06_Stars_3_10
+      rect:
+        serializedVersion: 2
+        x: 826
+        y: 728
+        width: 124
+        height: 125
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 3d5a1ab215a2b14e0800000000000000
+      internalID: -2009966280578062893
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: layer06_Stars_3_11
+      rect:
+        serializedVersion: 2
+        x: 1671
+        y: 721
+        width: 125
+        height: 125
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 4e9b0d863930c5ee0800000000000000
+      internalID: -1271137063171737116
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: layer06_Stars_3_12
+      rect:
+        serializedVersion: 2
+        x: 4
+        y: 509
+        width: 115
+        height: 115
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: e7ece358d8f007090800000000000000
+      internalID: -8038908234356044162
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: layer06_Stars_3_13
+      rect:
+        serializedVersion: 2
+        x: 210
+        y: 432
+        width: 115
+        height: 115
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 8e1ec00f3485a84b0800000000000000
+      internalID: -5437436551283023384
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: layer06_Stars_3_14
+      rect:
+        serializedVersion: 2
+        x: 357
+        y: 492
+        width: 127
+        height: 127
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 8a758b2b32ebb4070800000000000000
+      internalID: 8091770216032786344
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: layer06_Stars_3_15
+      rect:
+        serializedVersion: 2
+        x: 525
+        y: 319
+        width: 142
+        height: 233
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: fc704c8e764645f60800000000000000
+      internalID: 8022147233703266255
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: layer06_Stars_3_16
+      rect:
+        serializedVersion: 2
+        x: 874
+        y: 447
+        width: 193
+        height: 161
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: c9c0a757b91a91d70800000000000000
+      internalID: 9014413818221694108
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: layer06_Stars_3_17
+      rect:
+        serializedVersion: 2
+        x: 1275
+        y: 545
+        width: 146
+        height: 146
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: b0a468ab575678ea0800000000000000
+      internalID: -5870612032939210229
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: layer06_Stars_3_18
+      rect:
+        serializedVersion: 2
+        x: 1368
+        y: 378
+        width: 185
+        height: 178
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 4804974f08f503390800000000000000
+      internalID: -7840661943789993852
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: layer06_Stars_3_19
+      rect:
+        serializedVersion: 2
+        x: 1475
+        y: 516
+        width: 115
+        height: 115
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 917fa9a31f6ebc660800000000000000
+      internalID: 7407267935885653785
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: layer06_Stars_3_20
+      rect:
+        serializedVersion: 2
+        x: 286
+        y: 297
+        width: 127
+        height: 127
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 29420b194037b2a10800000000000000
+      internalID: 1885727332445987986
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    outline: []
+    customData: 
+    physicsShape: []
+    bones: []
+    spriteID: 
+    internalID: 0
+    vertices: []
+    indices: 
+    edges: []
+    weights: []
+    secondaryTextures: []
+    spriteCustomMetadata:
+      entries: []
+    nameFileIdTable:
+      layer06_Stars_3_0: 6176130251338552060
+      layer06_Stars_3_1: -4235498600101157036
+      layer06_Stars_3_10: -2009966280578062893
+      layer06_Stars_3_11: -1271137063171737116
+      layer06_Stars_3_12: -8038908234356044162
+      layer06_Stars_3_13: -5437436551283023384
+      layer06_Stars_3_14: 8091770216032786344
+      layer06_Stars_3_15: 8022147233703266255
+      layer06_Stars_3_16: 9014413818221694108
+      layer06_Stars_3_17: -5870612032939210229
+      layer06_Stars_3_18: -7840661943789993852
+      layer06_Stars_3_19: 7407267935885653785
+      layer06_Stars_3_2: 6562618306627367351
+      layer06_Stars_3_20: 1885727332445987986
+      layer06_Stars_3_3: -3078490344741911258
+      layer06_Stars_3_4: 1107170767577276058
+      layer06_Stars_3_5: -1378029826817242495
+      layer06_Stars_3_6: -6996165502684305646
+      layer06_Stars_3_7: -5226339186194800478
+      layer06_Stars_3_8: -8404316763587794537
+      layer06_Stars_3_9: -2486707417786760263
+  mipmapLimitGroupName: 
+  pSDRemoveMatte: 0
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
