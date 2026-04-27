@@ -8,6 +8,7 @@ public class File_Manager : MonoBehaviour
     {
         Screen.sleepTimeout = SleepTimeout.NeverSleep;
         Data_Manager.Set_HighScore(PlayerPrefs.GetInt(HighScoreKey, 0));
+        Leaderboard_Manager.Load();
     }
 
     public static void Save_Info()

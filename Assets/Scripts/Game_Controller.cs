@@ -267,6 +267,10 @@ public class Game_Controller : MonoBehaviour
         bool newHighScore = Data_Manager.Get_HighScore() < Score;
         if (newHighScore) Data_Manager.Set_HighScore(Score);
 
+        // Save the score into the leaderboard (top 10).
+        Leaderboard_Manager.Add_Score("Player", Score);
+        Leaderboard_Manager.Save();
+
         GameObject bgCanvas = GameObject.Find("Background_Canvas");
         if (bgCanvas == null) return;
 
