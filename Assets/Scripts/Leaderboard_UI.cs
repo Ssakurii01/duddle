@@ -1,5 +1,6 @@
 using System.Collections;
 using System.Collections.Generic;
+using Luxodd.Game.Scripts.Game.Leaderboard;
 using UnityEngine;
 using UnityEngine.SceneManagement;
 using UnityEngine.UI;
@@ -39,6 +40,15 @@ public class Leaderboard_UI : MonoBehaviour
     readonly List<Vector2> rowTargetPos = new List<Vector2>();
     readonly List<Text> scoreTexts = new List<Text>();
     readonly List<int> scoreValues = new List<int>();
+    readonly List<Text> nameTexts = new List<Text>();
+    readonly List<Image> rowImages = new List<Image>();
+
+    // Real-time settings (tweak from Inspector if you make these public)
+    [Tooltip("Refresh from Luxodd server every N seconds while the panel is visible. 0 = off.")]
+    public float AutoRefreshSeconds = 5f;
+    Coroutine autoRefreshCoroutine;
+    bool fetching = false;
+    Text statusText;     // small "Loading..." / "Offline" hint at the top
 
     // -------- Static helper --------
 
@@ -61,7 +71,13 @@ public class Leaderboard_UI : MonoBehaviour
         if (panel == null) Build();
         visible = !visible;
         panel.SetActive(visible);
-        if (visible) StartCoroutine(PlayInAnimations());
+        if (visible)
+        {
+            StartCoroutine(PlayInAnimations());
+            RefreshData();
+            StartAutoRefresh();
+        }
+        else StopAutoRefresh();
     }
 
     public void Show()
@@ -70,6 +86,8 @@ public class Leaderboard_UI : MonoBehaviour
         visible = true;
         panel.SetActive(true);
         StartCoroutine(PlayInAnimations());
+        RefreshData();
+        StartAutoRefresh();
     }
 
     public void Hide()
@@ -77,6 +95,33 @@ public class Leaderboard_UI : MonoBehaviour
         if (panel == null) return;
         visible = false;
         panel.SetActive(false);
+        StopAutoRefresh();
+    }
+
+    void StartAutoRefresh()
+    {
+        StopAutoRefresh();
+        if (AutoRefreshSeconds > 0f)
+            autoRefreshCoroutine = StartCoroutine(AutoRefreshLoop());
+    }
+
+    void StopAutoRefresh()
+    {
+        if (autoRefreshCoroutine != null)
+        {
+            StopCoroutine(autoRefreshCoroutine);
+            autoRefreshCoroutine = null;
+        }
+    }
+
+    IEnumerator AutoRefreshLoop()
+    {
+        while (visible)
+        {
+            yield return new WaitForSecondsRealtime(AutoRefreshSeconds);
+            if (!visible) yield break;
+            RefreshData();
+        }
     }
 
     // -------- Update: continuous wiggles --------
@@ -191,6 +236,8 @@ public class Leaderboard_UI : MonoBehaviour
         rowTargetPos.Clear();
         scoreTexts.Clear();
         scoreValues.Clear();
+        nameTexts.Clear();
+        rowImages.Clear();
 
         var entries = Leaderboard_Manager.Get_Entries();
         const int rowsToShow = 5;
@@ -203,6 +250,11 @@ public class Leaderboard_UI : MonoBehaviour
             BuildRow(card.transform, i, y, i < entries.Count ? entries[i] : default, i < entries.Count);
         }
 
+        // ---------- Status text (top, small) ----------
+        statusText = AddText(card.transform, "Status", "",
+                18, new Color(1f, 1f, 1f, 0.65f), TextAnchor.MiddleCenter,
+                new Vector2(0.5f, 1f), new Vector2(0, -118), new Vector2(700, 22));
+
         // ---------- Action buttons: Play Again + Main Menu ----------
         BuildActionButtons(card.transform);
 
@@ -210,6 +262,103 @@ public class Leaderboard_UI : MonoBehaviour
         AutoWireSceneButtons();
 
         block.onClick.AddListener(Hide);
+    }
+
+    // ------------------------------------------------------------------
+    //  Real-time data refresh — Luxodd server first, local fallback.
+    // ------------------------------------------------------------------
+
+    public void RefreshData()
+    {
+        if (fetching) return;
+
+        // Prefer Luxodd if a connected bridge exists
+        if (Luxodd_Bridge.Instance != null && Luxodd_Bridge.Instance.IsConnected)
+        {
+            fetching = true;
+            SetStatus("Loading...");
+            Luxodd_Bridge.Instance.FetchLeaderboard(response =>
+            {
+                fetching = false;
+                if (response != null && response.Leaderboard != null)
+                {
+                    DisplayServer(response);
+                    SetStatus("Live");
+                }
+                else
+                {
+                    DisplayLocal();
+                    SetStatus("Offline (local scores)");
+                }
+            });
+        }
+        else
+        {
+            // No bridge / not connected — show local scores
+            DisplayLocal();
+            SetStatus(Luxodd_Bridge.Instance == null ? "" : "Offline (local scores)");
+        }
+    }
+
+    void SetStatus(string s)
+    {
+        if (statusText != null) statusText.text = s;
+    }
+
+    void DisplayServer(LeaderboardDataResponse response)
+    {
+        var board = response.Leaderboard ?? new List<LeaderboardData>();
+        string currentUser = response.CurrentUserData != null ? response.CurrentUserData.PlayerName : "";
+
+        for (int i = 0; i < nameTexts.Count; i++)
+        {
+            bool hasEntry = i < board.Count;
+            if (hasEntry)
+            {
+                LeaderboardData e = board[i];
+                if (nameTexts[i]  != null) nameTexts[i].text  = string.IsNullOrEmpty(e.PlayerName) ? "Player" : e.PlayerName;
+                if (scoreTexts[i] != null) scoreTexts[i].text = e.TotalScore.ToString("N0");
+                scoreValues[i] = e.TotalScore;
+                ApplyHighlight(i, !string.IsNullOrEmpty(currentUser) && e.PlayerName == currentUser);
+            }
+            else
+            {
+                if (nameTexts[i]  != null) nameTexts[i].text  = "---";
+                if (scoreTexts[i] != null) scoreTexts[i].text = "0";
+                scoreValues[i] = 0;
+                ApplyHighlight(i, false);
+            }
+        }
+    }
+
+    void DisplayLocal()
+    {
+        var entries = Leaderboard_Manager.Get_Entries();
+        for (int i = 0; i < nameTexts.Count; i++)
+        {
+            bool hasEntry = i < entries.Count;
+            if (hasEntry)
+            {
+                Leaderboard_Manager.Entry e = entries[i];
+                if (nameTexts[i]  != null) nameTexts[i].text  = string.IsNullOrEmpty(e.Name) ? "Player" : e.Name;
+                if (scoreTexts[i] != null) scoreTexts[i].text = e.Score.ToString("N0");
+                scoreValues[i] = e.Score;
+                ApplyHighlight(i, i == 0); // top row always highlighted in local view
+            }
+            else
+            {
+                if (nameTexts[i]  != null) nameTexts[i].text  = "---";
+                if (scoreTexts[i] != null) scoreTexts[i].text = "0";
+                scoreValues[i] = 0;
+                ApplyHighlight(i, false);
+            }
+        }
+    }
+
+    void ApplyHighlight(int index, bool on)
+    {
+        if (index < 0 || index >= rowImages.Count || rowImages[index] == null) return;
+        rowImages[index].color = on ? HighlightRow : new Color(0, 0, 0, 0);
     }
 
     void BuildActionButtons(Transform card)
@@ -319,10 +468,11 @@ public class Leaderboard_UI : MonoBehaviour
             highlight ? HighlightRow : new Color(0, 0, 0, 0),
             new Vector2(0.5f, 1f), new Vector2(0, y), new Vector2(740, 110));
 
-        // Track for animation
+        // Track for animation + later updates
         RectTransform rowRT = row.GetComponent<RectTransform>();
         rowRTs.Add(rowRT);
         rowTargetPos.Add(new Vector2(0, y));
+        rowImages.Add(row.GetComponent<Image>());
 
         // Separator line at bottom
         AddPanel(row.transform, "Sep", RowSeparator,
@@ -350,9 +500,10 @@ public class Leaderboard_UI : MonoBehaviour
 
         // Big player name — clearly BELOW the label
         string name = hasEntry ? entry.Name : "---";
-        AddText(row.transform, "Name", name,
+        Text nameText = AddText(row.transform, "Name", name,
                 30, RowName, TextAnchor.MiddleLeft,
                 new Vector2(0f, 0.5f), new Vector2(195, -12), new Vector2(280, 36));
+        nameTexts.Add(nameText);
 
         // ----- RIGHT side: Score area -----
         // Tiny label "SCORE" — clearly ABOVE the number
