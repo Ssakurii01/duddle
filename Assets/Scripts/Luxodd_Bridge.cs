@@ -47,10 +47,13 @@ public class Luxodd_Bridge : MonoBehaviour
     public int LevelNumber = 1;
 
     // Public read-only state
-    public bool IsConnected   { get; private set; }
+    // Always delegate to the plugin so a dropped connection is reflected
+    // immediately (the plugin updates its own _isConnected flag on close).
+    public bool IsConnected => _webSocketService != null && _webSocketService.IsConnected;
     public string PlayerName  { get; private set; } = "Player";
     public float CurrentBalance { get; private set; }
     public LeaderboardDataResponse CachedLeaderboard { get; private set; }
+    bool _connectAttempted;
 
     void Awake()
     {
@@ -97,7 +100,7 @@ public class Luxodd_Bridge : MonoBehaviour
 
     void OnConnectSuccess()
     {
-        IsConnected = true;
+        _connectAttempted = true;
         Debug.Log("[Luxodd_Bridge] Connected to server.");
 
         if (ActivateHealthCheck && _healthStatusCheckService != null)
@@ -109,7 +112,7 @@ public class Luxodd_Bridge : MonoBehaviour
 
     void OnConnectError()
     {
-        IsConnected = false;
+        _connectAttempted = true;
         Debug.LogError("[Luxodd_Bridge] Failed to connect to Luxodd server.");
     }
 
