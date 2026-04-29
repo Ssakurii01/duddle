@@ -49,7 +49,7 @@ public class Luxodd_Bridge : MonoBehaviour
     // Public read-only state
     public bool IsConnected   { get; private set; }
     public string PlayerName  { get; private set; } = "Player";
-    public int CurrentBalance { get; private set; }
+    public float CurrentBalance { get; private set; }
     public LeaderboardDataResponse CachedLeaderboard { get; private set; }
 
     void Awake()
