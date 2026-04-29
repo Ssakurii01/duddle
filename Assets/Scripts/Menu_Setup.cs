@@ -30,11 +30,20 @@ public class Menu_Setup : MonoBehaviour
     [Tooltip("Empty space reserved under the title — Play button is moved at least this far below center.")]
     public float TitleSafeAreaBelowCenter = 350f;
 
+    [Header("Auto-start timer ('Auto starts in N seconds')")]
+    [Tooltip("Move the timer text to a fixed spot below the Play button so it never gets clipped on wide WebGL screens.")]
+    public bool RepositionTimer = true;
+    [Tooltip("Position relative to screen center. Negative Y = below center.")]
+    public Vector2 TimerAnchoredPosition = new Vector2(0f, -560f);
+    public Vector2 TimerSize             = new Vector2(900f, 90f);
+    public int     TimerFontSize         = 36;
+
     void Start()
     {
         ApplyBackground();
         if (HideOldTextTitle) HideTitle();
         AdjustPlayButton();
+        if (RepositionTimer) AdjustTimer();
     }
 
     // ---------- Background ----------
@@ -131,5 +140,60 @@ public class Menu_Setup : MonoBehaviour
         // Position — clamp Y so it never overlaps the title area
         float clampedY = Mathf.Min(PlayButtonAnchoredPosition.y, -TitleSafeAreaBelowCenter);
         rt.anchoredPosition = new Vector2(PlayButtonAnchoredPosition.x, clampedY);
+    }
+
+    // ---------- Auto-start timer ----------
+
+    void AdjustTimer()
+    {
+        // Find the timer GameObject by common names. The MainMenu_AutoStart
+        // script is what owns the actual TMP_Text reference, so prefer the
+        // GameObject that script lives on.
+        GameObject timerObj = null;
+
+        var auto = FindFirstObjectByType<MainMenu_AutoStart>();
+        if (auto != null && auto.TimerText != null)
+            timerObj = auto.TimerText.gameObject;
+
+        if (timerObj == null)
+        {
+            string[] alts = { "Timer", "TimerText", "AutoStartTimer", "Timer_Text" };
+            foreach (string n in alts)
+            {
+                timerObj = GameObject.Find(n);
+                if (timerObj != null) break;
+            }
+        }
+        if (timerObj == null) return;
+
+        RectTransform rt = timerObj.GetComponent<RectTransform>();
+        if (rt == null) return;
+
+        rt.anchorMin = new Vector2(0.5f, 0.5f);
+        rt.anchorMax = new Vector2(0.5f, 0.5f);
+        rt.pivot     = new Vector2(0.5f, 0.5f);
+        rt.sizeDelta = TimerSize;
+        rt.anchoredPosition = TimerAnchoredPosition;
+
+        // Center-align text whether it's TMP or legacy UI Text
+        var tmp = timerObj.GetComponent<TMPro.TMP_Text>();
+        if (tmp != null)
+        {
+            tmp.alignment = TMPro.TextAlignmentOptions.Center;
+            tmp.fontSize = TimerFontSize;
+            tmp.enableWordWrapping = false;
+            tmp.overflowMode = TMPro.TextOverflowModes.Overflow;
+        }
+        else
+        {
+            var legacy = timerObj.GetComponent<UnityEngine.UI.Text>();
+            if (legacy != null)
+            {
+                legacy.alignment = TextAnchor.MiddleCenter;
+                legacy.fontSize = TimerFontSize;
+                legacy.horizontalOverflow = HorizontalWrapMode.Overflow;
+                legacy.verticalOverflow = VerticalWrapMode.Overflow;
+            }
+        }
     }
 }
