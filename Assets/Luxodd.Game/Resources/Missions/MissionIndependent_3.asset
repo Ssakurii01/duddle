@@ -1,0 +1,24 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: e638d99f691dad6458cd8e14bbf80c3c, type: 3}
+  m_Name: MissionIndependent_3
+  m_EditorClassIdentifier: 
+  <Id>k__BackingField: mission_independent_3
+  <Name>k__BackingField: Destroy explosives before snow crusher
+  <Description>k__BackingField: Destroy explosives before snow crusher
+  <Type>k__BackingField: 1
+  <Difficulty>k__BackingField: 1
+  <Hardness>k__BackingField: 38
+  <Bet>k__BackingField: 1
+  <Ratio>k__BackingField: 1.5
+  <Value>k__BackingField: 2
+  <Level>k__BackingField: 4

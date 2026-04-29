@@ -30,6 +30,9 @@ public class MainMenu_AutoStart : MonoBehaviour
 
     void Start()
     {
+        if (GetComponent<MainMenu_Music>() == null)
+            gameObject.AddComponent<MainMenu_Music>();
+
         timer = AutoStartSeconds;
 
         if (TimerText != null)
@@ -71,6 +74,7 @@ public class MainMenu_AutoStart : MonoBehaviour
         if (timer <= 0f)
         {
             loading = true;
+            MainMenu_Music.StopMusic();
             SceneManager.LoadScene(SceneToLoad);
         }
     }

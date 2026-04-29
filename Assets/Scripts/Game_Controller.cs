@@ -45,6 +45,9 @@ public class Game_Controller : MonoBehaviour
         ScoreMultiplier = 1f;
         CoinScore = 0;
 
+        if (GetComponent<InGame_Music>() == null)
+            gameObject.AddComponent<InGame_Music>();
+
         Player = Instantiate(PlayerPrefab, SpawnPosition, Quaternion.identity);
         Player.name = "Doodler";
 
@@ -60,6 +63,10 @@ public class Game_Controller : MonoBehaviour
         scoreBaseScale = Txt_Score.rectTransform.localScale;
 
         Time.timeScale = 0f;
+
+        // Tell the Luxodd platform a new level run has begun (analytics).
+        if (Luxodd_Bridge.Instance != null)
+            Luxodd_Bridge.Instance.SendLevelBegin();
     }
 
     void Update()
@@ -103,11 +110,23 @@ public class Game_Controller : MonoBehaviour
     {
         if (!Game_Started || Game_Over) return;
 
+        // While respawning, skip the death check (player is frozen at safe spot).
+        if (Lives_System.IsRespawning) return;
+
         if (Player.transform.position.y > Max_Height)
             Max_Height = Player.transform.position.y;
 
         if (Player.transform.position.y - Camera.main.transform.position.y < Get_DestroyDistance())
         {
+            // If hearts remain, lose one and respawn instead of game over.
+            if (Lives_System.Instance != null &&
+                Lives_System.Instance.LoseLifeAndRespawn(Player))
+            {
+                GetComponent<AudioSource>().Play();
+                return;
+            }
+
+            // No hearts left → real game over (leaderboard appears via the UI).
             GetComponent<AudioSource>().Play();
             Camera_Shake.Shake(0.6f, 0.5f);
             Set_GameOver();
@@ -264,8 +283,22 @@ public class Game_Controller : MonoBehaviour
 
     void Set_GameOver()
     {
+        InGame_Music.StopMusic();
+
         bool newHighScore = Data_Manager.Get_HighScore() < Score;
         if (newHighScore) Data_Manager.Set_HighScore(Score);
+
+        // Save the score into the local leaderboard (top 10).
+        string playerName = (Luxodd_Bridge.Instance != null && !string.IsNullOrEmpty(Luxodd_Bridge.Instance.PlayerName))
+            ? Luxodd_Bridge.Instance.PlayerName
+            : "Player";
+        Leaderboard_Manager.Add_Score(playerName, Score);
+        Leaderboard_Manager.Save();
+
+        // Luxodd: send level_end to the server and queue the Restart popup
+        // ~3 seconds after the leaderboard appears (configurable on the bridge).
+        if (Luxodd_Bridge.Instance != null)
+            Luxodd_Bridge.Instance.TriggerRestartPopupAfterGameOver(Score);
 
         GameObject bgCanvas = GameObject.Find("Background_Canvas");
         if (bgCanvas == null) return;
@@ -334,6 +367,10 @@ public class Game_Controller : MonoBehaviour
             yield return null;
         }
         foreach (var pair in buttons) pair.rt.localScale = pair.target;
+
+        // 6. Show the jungle leaderboard panel after the game over animation
+        yield return new WaitForSecondsRealtime(0.4f);
+        Leaderboard_UI.ShowAutomatic();
     }
 
     IEnumerator ShowHighScoreCelebration()

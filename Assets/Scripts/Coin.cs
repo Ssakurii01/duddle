@@ -7,6 +7,7 @@ public class Coin : MonoBehaviour {
     private int coinValue = 100;
     private float bobTimer = 0f;
     private float startY;
+    private static AudioClip coinSound;
 
     void Start()
     {
@@ -23,6 +24,9 @@ public class Coin : MonoBehaviour {
         spriteRenderer.sprite = coinSprite != null ? coinSprite : CreateCoinSprite();
         spriteRenderer.color = Color.white;
         spriteRenderer.sortingOrder = 4;
+
+        if (coinSound == null)
+            coinSound = Resources.Load<AudioClip>("CoinSound");
 
         transform.localScale = new Vector3(0.7f, 0.7f, 1f);
 
@@ -71,6 +75,9 @@ public class Coin : MonoBehaviour {
         if (other.gameObject.name != "Doodler") return;
 
         collected = true;
+
+        if (coinSound != null)
+            AudioSource.PlayClipAtPoint(coinSound, transform.position);
 
         // Add bonus score
         Game_Controller.AddCoinScore(coinValue);

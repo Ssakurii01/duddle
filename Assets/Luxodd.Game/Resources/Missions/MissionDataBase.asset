@@ -1,0 +1,25 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 4f361fdab41acdd46828b7041cc1f8b0, type: 3}
+  m_Name: MissionDataBase
+  m_EditorClassIdentifier: 
+  <Missions>k__BackingField:
+  - {fileID: 11400000, guid: 41f2e7b3293e83c4f8cbbf7d1f8908fd, type: 2}
+  - {fileID: 11400000, guid: 8c0fb875a7276c54fbfb419f81fd6e7c, type: 2}
+  - {fileID: 11400000, guid: cb62e8642d4ada44f8f26e597e62af90, type: 2}
+  - {fileID: 11400000, guid: a0106308751de2741bb8c5cd1fd48bc3, type: 2}
+  - {fileID: 11400000, guid: bd729e65f50a4c747ac330a83bf5d937, type: 2}
+  - {fileID: 11400000, guid: 075cc8c26e0842d48991c64d96f48273, type: 2}
+  - {fileID: 11400000, guid: b101e92496596ad44a444d37734e3821, type: 2}
+  - {fileID: 11400000, guid: 0dcc104806bff0f4cacae5063804e101, type: 2}
+  - {fileID: 11400000, guid: f76ffe22241929741972a64c0b994e40, type: 2}
+  - {fileID: 11400000, guid: 0f59b0301778aeb4687a24cb779b8358, type: 2}

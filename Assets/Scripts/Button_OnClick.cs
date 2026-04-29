@@ -6,6 +6,7 @@ public class Button_OnClick : MonoBehaviour
 {
     public void Play_OnClick()
     {
+        MainMenu_Music.StopMusic();
         SceneManager.LoadScene("In_Game");
     }
 
