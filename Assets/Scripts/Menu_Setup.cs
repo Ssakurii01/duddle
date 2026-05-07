@@ -33,12 +33,16 @@ public class Menu_Setup : MonoBehaviour
     [Header("Auto-start timer ('Auto starts in N seconds')")]
     [Tooltip("Move the timer text to a fixed spot next to the Play button so it never gets clipped on wide WebGL screens.")]
     public bool RepositionTimer = true;
-    [Tooltip("Center position relative to screen center. Default puts the timer to the RIGHT of the Play button at the same height.")]
-    public Vector2 TimerAnchoredPosition = new Vector2(420f, -380f);
-    public Vector2 TimerSize             = new Vector2(520f, 110f);
-    public int     TimerFontSize         = 32;
+    [Tooltip("Pixels of empty space between the right edge of the Play button and the left edge of the timer.")]
+    public float TimerGapFromButton = 30f;
+    [Tooltip("Extra fine-tune offset added on top of the auto-computed right-of-button position.")]
+    public Vector2 TimerExtraOffset = Vector2.zero;
+    public Vector2 TimerSize         = new Vector2(560f, 110f);
+    public int     TimerFontSize     = 32;
     [Tooltip("Text alignment. Left makes the timer read like it's labeling the button on its right.")]
     public TextAnchor TimerAlignment = TextAnchor.MiddleLeft;
+    [Tooltip("Fallback position used only when the Play button can't be found. Negative Y = below center.")]
+    public Vector2 TimerFallbackPosition = new Vector2(420f, -380f);
 
     void Start()
     {
@@ -171,11 +175,33 @@ public class Menu_Setup : MonoBehaviour
         RectTransform rt = timerObj.GetComponent<RectTransform>();
         if (rt == null) return;
 
+        // Find the Play button so we can sit immediately to the right of it.
+        RectTransform btnRT = FindPlayButtonRect();
+
         rt.anchorMin = new Vector2(0.5f, 0.5f);
         rt.anchorMax = new Vector2(0.5f, 0.5f);
-        rt.pivot     = new Vector2(0.5f, 0.5f);
         rt.sizeDelta = TimerSize;
-        rt.anchoredPosition = TimerAnchoredPosition;
+
+        if (btnRT != null)
+        {
+            // Pivot on the LEFT edge of the timer so anchoredPosition is the
+            // exact spot where the timer should start.
+            rt.pivot = new Vector2(0f, 0.5f);
+
+            Vector2 btnPos  = btnRT.anchoredPosition;
+            Vector2 btnSize = btnRT.sizeDelta;
+
+            float startX = btnPos.x + btnSize.x * 0.5f + TimerGapFromButton;
+            float y      = btnPos.y;
+
+            rt.anchoredPosition = new Vector2(startX, y) + TimerExtraOffset;
+        }
+        else
+        {
+            // No Play button found — fall back to the configured absolute spot.
+            rt.pivot = new Vector2(0.5f, 0.5f);
+            rt.anchoredPosition = TimerFallbackPosition;
+        }
 
         // Apply text alignment / size — works for either TMP or legacy UI Text
         var tmp = timerObj.GetComponent<TMPro.TMP_Text>();
@@ -197,6 +223,19 @@ public class Menu_Setup : MonoBehaviour
                 legacy.verticalOverflow = VerticalWrapMode.Overflow;
             }
         }
+    }
+
+    static RectTransform FindPlayButtonRect()
+    {
+        string[] names = { "Button_Play", "PlayButton", "Play_Button", "Play" };
+        foreach (string n in names)
+        {
+            GameObject btn = GameObject.Find(n);
+            if (btn == null) continue;
+            RectTransform rt = btn.GetComponent<RectTransform>();
+            if (rt != null) return rt;
+        }
+        return null;
     }
 
     static TMPro.TextAlignmentOptions ToTmpAlignment(TextAnchor a)
