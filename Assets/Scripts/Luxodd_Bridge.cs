@@ -200,34 +200,25 @@ public class Luxodd_Bridge : MonoBehaviour
     // ---------------- In-game transaction ----------------
 
     /// <summary>
-    /// Schedules the Restart popup. Call right after game over — this method
-    /// first sends level_end (if not already sent) and then waits
-    /// RestartPopupDelay seconds (so the leaderboard has time to be visible)
-    /// before asking Luxodd to show the Restart/End choice.
+    /// Show the Restart popup after a delay. Call this only AFTER the
+    /// leaderboard panel has actually appeared, so the player sees the
+    /// scores first and the popup arrives a few seconds later.
+    ///
+    /// Pass delaySeconds &lt; 0 to use the configured RestartPopupDelay.
+    /// This method does NOT send level_end — call SendLevelEnd separately
+    /// (typically from Game_Controller.Set_GameOver) so the score is
+    /// recorded the moment the run ends.
     /// </summary>
-    public void TriggerRestartPopupAfterGameOver(int finalScore)
+    public void ShowRestartPopupWithDelay(float delaySeconds = -1f)
     {
-        StartCoroutine(RestartPopupSequence(finalScore));
+        float d = delaySeconds < 0f ? RestartPopupDelay : delaySeconds;
+        StartCoroutine(ShowRestartPopupCoroutine(d));
     }
 
-    IEnumerator RestartPopupSequence(int finalScore)
+    IEnumerator ShowRestartPopupCoroutine(float delay)
     {
-        // 1. Send level_end first — Restart popup must follow finalized session.
-        bool levelEndDone = false;
-        SendLevelEnd(finalScore, () => levelEndDone = true);
+        yield return new WaitForSecondsRealtime(delay);
 
-        // Wait for level_end OR a short timeout, whichever comes first.
-        float waitedForEnd = 0f;
-        while (!levelEndDone && waitedForEnd < 2f)
-        {
-            waitedForEnd += Time.unscaledDeltaTime;
-            yield return null;
-        }
-
-        // 2. Hold on the leaderboard for the configured delay.
-        yield return new WaitForSecondsRealtime(RestartPopupDelay);
-
-        // 3. Ask the platform to show the Restart popup.
         if (_webSocketService == null)
         {
             Debug.LogWarning("[Luxodd_Bridge] WebSocketService missing — cannot show Restart popup.");
@@ -244,6 +235,18 @@ public class Luxodd_Bridge : MonoBehaviour
             // If action == Restart, the platform creates a new session and
             // reloads the game automatically — we don't have to do anything.
         });
+    }
+
+    /// <summary>
+    /// Convenience: send level_end immediately and queue the Restart popup
+    /// to fire after RestartPopupDelay. Use ShowRestartPopupWithDelay
+    /// instead if you want the popup tied to a UI event (leaderboard
+    /// reveal) rather than to game-over time.
+    /// </summary>
+    public void TriggerRestartPopupAfterGameOver(int finalScore)
+    {
+        SendLevelEnd(finalScore);
+        ShowRestartPopupWithDelay();
     }
 
     /// <summary>

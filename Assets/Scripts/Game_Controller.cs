@@ -295,10 +295,11 @@ public class Game_Controller : MonoBehaviour
         Leaderboard_Manager.Add_Score(playerName, Score);
         Leaderboard_Manager.Save();
 
-        // Luxodd: send level_end to the server and queue the Restart popup
-        // ~3 seconds after the leaderboard appears (configurable on the bridge).
+        // Luxodd: send level_end to the server right now so the run is
+        // finalized before any popup can appear. The Restart popup itself
+        // is queued AFTER the leaderboard reveal in GameOverSequence.
         if (Luxodd_Bridge.Instance != null)
-            Luxodd_Bridge.Instance.TriggerRestartPopupAfterGameOver(Score);
+            Luxodd_Bridge.Instance.SendLevelEnd(Score);
 
         GameObject bgCanvas = GameObject.Find("Background_Canvas");
         if (bgCanvas == null) return;
@@ -371,6 +372,12 @@ public class Game_Controller : MonoBehaviour
         // 6. Show the jungle leaderboard panel after the game over animation
         yield return new WaitForSecondsRealtime(0.4f);
         Leaderboard_UI.ShowAutomatic();
+
+        // 7. Now that the leaderboard is visible, queue the Luxodd Restart
+        //    popup so the player sees the scores for a moment before the
+        //    platform's Restart / End choice arrives on top.
+        if (Luxodd_Bridge.Instance != null)
+            Luxodd_Bridge.Instance.ShowRestartPopupWithDelay();
     }
 
     IEnumerator ShowHighScoreCelebration()
