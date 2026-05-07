@@ -31,12 +31,14 @@ public class Menu_Setup : MonoBehaviour
     public float TitleSafeAreaBelowCenter = 350f;
 
     [Header("Auto-start timer ('Auto starts in N seconds')")]
-    [Tooltip("Move the timer text to a fixed spot below the Play button so it never gets clipped on wide WebGL screens.")]
+    [Tooltip("Move the timer text to a fixed spot next to the Play button so it never gets clipped on wide WebGL screens.")]
     public bool RepositionTimer = true;
-    [Tooltip("Position relative to screen center. Negative Y = below center.")]
-    public Vector2 TimerAnchoredPosition = new Vector2(0f, -560f);
-    public Vector2 TimerSize             = new Vector2(900f, 90f);
-    public int     TimerFontSize         = 36;
+    [Tooltip("Center position relative to screen center. Default puts the timer to the RIGHT of the Play button at the same height.")]
+    public Vector2 TimerAnchoredPosition = new Vector2(420f, -380f);
+    public Vector2 TimerSize             = new Vector2(520f, 110f);
+    public int     TimerFontSize         = 32;
+    [Tooltip("Text alignment. Left makes the timer read like it's labeling the button on its right.")]
+    public TextAnchor TimerAlignment = TextAnchor.MiddleLeft;
 
     void Start()
     {
@@ -175,11 +177,11 @@ public class Menu_Setup : MonoBehaviour
         rt.sizeDelta = TimerSize;
         rt.anchoredPosition = TimerAnchoredPosition;
 
-        // Center-align text whether it's TMP or legacy UI Text
+        // Apply text alignment / size — works for either TMP or legacy UI Text
         var tmp = timerObj.GetComponent<TMPro.TMP_Text>();
         if (tmp != null)
         {
-            tmp.alignment = TMPro.TextAlignmentOptions.Center;
+            tmp.alignment = ToTmpAlignment(TimerAlignment);
             tmp.fontSize = TimerFontSize;
             tmp.enableWordWrapping = false;
             tmp.overflowMode = TMPro.TextOverflowModes.Overflow;
@@ -189,11 +191,28 @@ public class Menu_Setup : MonoBehaviour
             var legacy = timerObj.GetComponent<UnityEngine.UI.Text>();
             if (legacy != null)
             {
-                legacy.alignment = TextAnchor.MiddleCenter;
+                legacy.alignment = TimerAlignment;
                 legacy.fontSize = TimerFontSize;
                 legacy.horizontalOverflow = HorizontalWrapMode.Overflow;
                 legacy.verticalOverflow = VerticalWrapMode.Overflow;
             }
+        }
+    }
+
+    static TMPro.TextAlignmentOptions ToTmpAlignment(TextAnchor a)
+    {
+        switch (a)
+        {
+            case TextAnchor.UpperLeft:    return TMPro.TextAlignmentOptions.TopLeft;
+            case TextAnchor.UpperCenter:  return TMPro.TextAlignmentOptions.Top;
+            case TextAnchor.UpperRight:   return TMPro.TextAlignmentOptions.TopRight;
+            case TextAnchor.MiddleLeft:   return TMPro.TextAlignmentOptions.Left;
+            case TextAnchor.MiddleCenter: return TMPro.TextAlignmentOptions.Center;
+            case TextAnchor.MiddleRight:  return TMPro.TextAlignmentOptions.Right;
+            case TextAnchor.LowerLeft:    return TMPro.TextAlignmentOptions.BottomLeft;
+            case TextAnchor.LowerCenter:  return TMPro.TextAlignmentOptions.Bottom;
+            case TextAnchor.LowerRight:   return TMPro.TextAlignmentOptions.BottomRight;
+            default:                      return TMPro.TextAlignmentOptions.Left;
         }
     }
 }
