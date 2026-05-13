@@ -27,7 +27,17 @@ public class Game_Timer : MonoBehaviour
 
         if (TimerText != null)
         {
-            baseScale = TimerText.rectTransform.localScale;
+            // Anchor to top-right and offset inward from the corner
+            RectTransform rt = TimerText.rectTransform;
+            rt.anchorMin = new Vector2(1f, 1f);
+            rt.anchorMax = new Vector2(1f, 1f);
+            rt.pivot     = new Vector2(1f, 1f);
+            rt.sizeDelta = new Vector2(240f, 70f);
+            rt.anchoredPosition = new Vector2(-30f, 0f);
+
+            TimerText.alignment = TextAlignmentOptions.TopRight;
+
+            baseScale = rt.localScale;
 
             // Force visible color — Unity's serialized default is invisible black.
             if (TextColor.a < 0.01f || (TextColor.r < 0.01f && TextColor.g < 0.01f && TextColor.b < 0.01f))

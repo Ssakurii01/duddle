@@ -295,17 +295,40 @@ namespace Luxodd.Game.Scripts.Network
 
         private async void OnApplicationQuit()
         {
-            if (_clientWebSocket != null && _clientWebSocket.State == WebSocketState.Open)
+            if (_clientWebSocket == null) return;
+            if (_clientWebSocket.State != WebSocketState.Open) return;
+
+            try
             {
-                await _clientWebSocket.CloseAsync(WebSocketCloseStatus.NormalClosure, "Application closing",
-                    CancellationToken.None);
+                using (var cts = new CancellationTokenSource(TimeSpan.FromMilliseconds(500)))
+                {
+                    await _clientWebSocket.CloseAsync(WebSocketCloseStatus.NormalClosure, "Application closing",
+                        cts.Token);
+                }
+            }
+            catch (WebSocketException)
+            {
+                // Remote already dropped the connection without finishing the close handshake — fine on shutdown.
+            }
+            catch (OperationCanceledException)
+            {
+                // Close handshake didn't complete in time — fine on shutdown.
+            }
+            catch (Exception e)
+            {
+                LoggerHelper.LogError($"[{DateTime.Now}][{GetType().Name}][{nameof(OnApplicationQuit)}] Error: {e.Message}");
+            }
+            finally
+            {
+                try { _clientWebSocket.Abort(); } catch { /* ignore */ }
+                try { _clientWebSocket.Dispose(); } catch { /* ignore */ }
             }
         }
 
         private async Task ReceiveMessage()
         {
             var buffer = new byte[1024 * 4];
-            while (_clientWebSocket.State == WebSocketState.Open)
+            while (_clientWebSocket != null && _clientWebSocket.State == WebSocketState.Open)
             {
                 try
                 {
@@ -327,19 +350,46 @@ namespace Luxodd.Game.Scripts.Network
                         case WebSocketMessageType.Close:
                             LoggerHelper.Log(
                                 $"[{DateTime.Now}][{GetType().Name}][{nameof(ReceiveMessage)}] OK, closed");
-                            await _clientWebSocket.CloseAsync(WebSocketCloseStatus.NormalClosure, "Closing",
-                                CancellationToken.None);
-                            break;
+                            try
+                            {
+                                if (_clientWebSocket.State == WebSocketState.CloseReceived ||
+                                    _clientWebSocket.State == WebSocketState.Open)
+                                {
+                                    await _clientWebSocket.CloseAsync(WebSocketCloseStatus.NormalClosure, "Closing",
+                                        CancellationToken.None);
+                                }
+                            }
+                            catch (Exception) { /* Already closing / closed — fine */ }
+                            return;
                         case WebSocketMessageType.Binary:
                             break;
                         default:
                             throw new ArgumentOutOfRangeException();
                     }
                 }
+                catch (WebSocketException)
+                {
+                    // Remote side closed the connection — expected, exit cleanly.
+                    _isConnected = false;
+                    _isConnectedEvent.Notify(false);
+                    return;
+                }
+                catch (InvalidOperationException)
+                {
+                    // Socket transitioned to a non-Open state mid-receive — exit cleanly.
+                    _isConnected = false;
+                    _isConnectedEvent.Notify(false);
+                    return;
+                }
+                catch (OperationCanceledException)
+                {
+                    return;
+                }
                 catch (Exception ex)
                 {
                     LoggerHelper.LogError($"[{GetType().Name}][{nameof(ReceiveMessage)}] OK, error: {ex.Message}");
                     UnityMainThread.Worker.AddJob(() => _errorCallback?.Invoke(ex.Message));
+                    return;
                 }
             }
         }

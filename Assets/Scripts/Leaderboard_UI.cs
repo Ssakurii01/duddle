@@ -32,6 +32,8 @@ public class Leaderboard_UI : MonoBehaviour
     GameObject panel;
     bool visible = false;
 
+    const float CardScale = 0.78f;
+
     // For animations
     Transform crownT;
     Transform snakeLT;
@@ -255,10 +257,7 @@ public class Leaderboard_UI : MonoBehaviour
                 18, new Color(1f, 1f, 1f, 0.65f), TextAnchor.MiddleCenter,
                 new Vector2(0.5f, 1f), new Vector2(0, -118), new Vector2(700, 22));
 
-        // ---------- Action buttons: Play Again + Main Menu ----------
-        BuildActionButtons(card.transform);
-
-        // Also auto-wire any existing scene buttons named "Play"/"Again"/"Menu"
+        // Action buttons removed — Play Again / Main Menu are handled by the scene's own buttons.
         AutoWireSceneButtons();
 
         block.onClick.AddListener(Hide);
@@ -545,10 +544,10 @@ public class Leaderboard_UI : MonoBehaviour
         {
             t += Time.unscaledDeltaTime;
             float p = Mathf.Clamp01(t / popDur);
-            card.localScale = Vector3.one * EaseOutBack(p);
+            card.localScale = Vector3.one * (CardScale * EaseOutBack(p));
             yield return null;
         }
-        card.localScale = Vector3.one;
+        card.localScale = Vector3.one * CardScale;
 
         // 2. Stagger rows: each slides in from the right with a bounce
         for (int i = 0; i < rowRTs.Count; i++)

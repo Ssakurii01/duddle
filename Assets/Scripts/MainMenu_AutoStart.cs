@@ -1,5 +1,6 @@
 using UnityEngine;
 using UnityEngine.SceneManagement;
+using UnityEngine.UI;
 using TMPro;
 
 public class MainMenu_AutoStart : MonoBehaviour
@@ -35,9 +36,35 @@ public class MainMenu_AutoStart : MonoBehaviour
 
         timer = AutoStartSeconds;
 
+        Button playButton = FindPlayButton();
+
         if (TimerText != null)
         {
-            baseScale = TimerText.rectTransform.localScale;
+            RectTransform rt = TimerText.rectTransform;
+
+            // Anchor timer to screen center and place it just below the Play button
+            rt.anchorMin = new Vector2(0.5f, 0.5f);
+            rt.anchorMax = new Vector2(0.5f, 0.5f);
+            rt.pivot = new Vector2(0.5f, 0.5f);
+            rt.sizeDelta = new Vector2(700f, 80f);
+
+            float belowY = -120f;
+            if (playButton != null)
+            {
+                RectTransform prt = playButton.GetComponent<RectTransform>();
+                if (prt != null)
+                {
+                    float buttonHeight = prt.rect.height * Mathf.Abs(prt.localScale.y);
+                    belowY = prt.anchoredPosition.y - (buttonHeight * 0.5f) - 50f;
+                }
+            }
+            rt.anchoredPosition = new Vector2(-120f, belowY);
+
+            // Smaller font + center alignment
+            TimerText.fontSize = 28f;
+            TimerText.alignment = TextAlignmentOptions.Center;
+
+            baseScale = rt.localScale;
 
             // Force visible defaults — ignore whatever may be serialized as black on existing components.
             if (IsUnusable(NormalColor)) NormalColor = new Color(1f, 1f, 1f, 1f);          // white
@@ -48,6 +75,17 @@ public class MainMenu_AutoStart : MonoBehaviour
         }
 
         UpdateText((int)Mathf.Ceil(timer));
+    }
+
+    Button FindPlayButton()
+    {
+        Button[] buttons = FindObjectsOfType<Button>(true);
+        foreach (Button b in buttons)
+        {
+            string n = b.gameObject.name.ToLower();
+            if (n.Contains("play") && !n.Contains("again")) return b;
+        }
+        return null;
     }
 
     static bool IsUnusable(Color c)

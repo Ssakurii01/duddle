@@ -41,7 +41,7 @@ public class Luxodd_Bridge : MonoBehaviour
     public bool ActivateHealthCheck = true;
 
     [Tooltip("Seconds to wait after the leaderboard appears before showing the Restart popup.")]
-    public float RestartPopupDelay = 3f;
+    public float RestartPopupDelay = 5f;
 
     [Tooltip("Level number to send to the server. Monkey Jump is one continuous run, so we keep it at 1.")]
     public int LevelNumber = 1;
@@ -261,5 +261,52 @@ public class Luxodd_Bridge : MonoBehaviour
             if (action == SessionOptionAction.Continue) onContinue?.Invoke();
             else onEnd?.Invoke();
         });
+    }
+
+    /// <summary>
+    /// Show the Continue popup after a delay. Used after the leaderboard
+    /// appears, so the player sees their score for a few seconds before the
+    /// platform Continue / End choice arrives on top.
+    /// Pass delaySeconds &lt; 0 to use the configured RestartPopupDelay.
+    /// </summary>
+    public void ShowContinuePopupWithDelay(Action onContinue = null, Action onEnd = null, float delaySeconds = -1f)
+    {
+        float d = delaySeconds < 0f ? RestartPopupDelay : delaySeconds;
+        StartCoroutine(ShowContinuePopupCoroutine(d, onContinue, onEnd));
+    }
+
+    IEnumerator ShowContinuePopupCoroutine(float delay, Action onContinue, Action onEnd)
+    {
+        yield return new WaitForSecondsRealtime(delay);
+
+        if (_webSocketService == null)
+        {
+            Debug.LogWarning("[Luxodd_Bridge] WebSocketService missing — cannot show Continue popup.");
+            onEnd?.Invoke();
+            yield break;
+        }
+
+        _webSocketService.SendSessionOptionContinue(action =>
+        {
+            Debug.Log("[Luxodd_Bridge] Continue popup result: " + action);
+            if (action == SessionOptionAction.Continue)
+            {
+                onContinue?.Invoke();
+            }
+            else
+            {
+                // Game is responsible for finalizing the session (level_end)
+                // and then handing control back via BackToSystem. The game
+                // chains the two calls inside its onEnd callback.
+                onEnd?.Invoke();
+            }
+        });
+    }
+
+    /// <summary>Hand control back to the Luxodd platform UI.</summary>
+    public void BackToSystem()
+    {
+        if (_webSocketService == null) return;
+        _webSocketService.BackToSystem();
     }
 }

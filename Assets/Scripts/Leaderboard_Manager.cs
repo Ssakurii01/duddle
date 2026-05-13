@@ -26,7 +26,7 @@ public static class Leaderboard_Manager
 
     public static IReadOnlyList<Entry> Get_Entries() => entries;
 
-    /// <summary>Add a score and keep only the top MaxEntries (descending).</summary>
+    /// <summary>Add a score; the most recent one is kept at the top (chronological, not by rank).</summary>
     public static void Add_Score(string name, int score)
     {
         if (string.IsNullOrWhiteSpace(name)) name = "Player";
@@ -34,8 +34,7 @@ public static class Leaderboard_Manager
         name = name.Replace("|", "").Replace(";", "").Trim();
         if (name.Length > 16) name = name.Substring(0, 16);
 
-        entries.Add(new Entry(name, score));
-        entries.Sort((a, b) => b.Score.CompareTo(a.Score));
+        entries.Insert(0, new Entry(name, score));
         if (entries.Count > MaxEntries) entries.RemoveRange(MaxEntries, entries.Count - MaxEntries);
     }
 
@@ -63,7 +62,7 @@ public static class Leaderboard_Manager
             if (!int.TryParse(parts[1], out score)) continue;
             entries.Add(new Entry(parts[0], score));
         }
-        entries.Sort((a, b) => b.Score.CompareTo(a.Score));
+        // Preserve stored order — most-recent-first, not sorted by score.
     }
 
     public static void Save()

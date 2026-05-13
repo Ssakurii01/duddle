@@ -295,11 +295,10 @@ public class Game_Controller : MonoBehaviour
         Leaderboard_Manager.Add_Score(playerName, Score);
         Leaderboard_Manager.Save();
 
-        // Luxodd: send level_end to the server right now so the run is
-        // finalized before any popup can appear. The Restart popup itself
-        // is queued AFTER the leaderboard reveal in GameOverSequence.
-        if (Luxodd_Bridge.Instance != null)
-            Luxodd_Bridge.Instance.SendLevelEnd(Score);
+        // NOTE: We deliberately DO NOT call SendLevelEnd here. Per the
+        // In-Game Transactions spec, when offering a Continue popup the
+        // session must remain open. SendLevelEnd is sent only when the
+        // player chooses "End" (see EndSessionAndReturnToSystem below).
 
         GameObject bgCanvas = GameObject.Find("Background_Canvas");
         if (bgCanvas == null) return;
@@ -373,11 +372,67 @@ public class Game_Controller : MonoBehaviour
         yield return new WaitForSecondsRealtime(0.4f);
         Leaderboard_UI.ShowAutomatic();
 
-        // 7. Now that the leaderboard is visible, queue the Luxodd Restart
-        //    popup so the player sees the scores for a moment before the
-        //    platform's Restart / End choice arrives on top.
+        // 7. Five seconds after the leaderboard appears, show the in-game
+        //    transaction Continue popup. Per the spec:
+        //      - Continue → the SAME session resumes (no level_end sent,
+        //        no scene reload). The game restores playable state itself.
+        //      - End → the game finalizes the session (level_end) and the
+        //        bridge calls BackToSystem.
         if (Luxodd_Bridge.Instance != null)
-            Luxodd_Bridge.Instance.ShowRestartPopupWithDelay();
+        {
+            Luxodd_Bridge.Instance.ShowContinuePopupWithDelay(
+                onContinue: ResumeAfterContinue,
+                onEnd: EndSessionAndReturnToSystem,
+                delaySeconds: 5f);
+        }
+    }
+
+    // Resume the SAME game session after the player buys Continue.
+    // Spec requirement: continuation logic is the game's responsibility.
+    void ResumeAfterContinue()
+    {
+        // Hide the leaderboard popup if it's still up.
+        Leaderboard_UI lb = FindObjectOfType<Leaderboard_UI>();
+        if (lb != null) lb.Hide();
+
+        // Hide the game-over buttons that were just animated in.
+        Button_OnClick.Set_GameOverMenu(false);
+
+        // Reset internal state so FixedUpdate stops triggering Set_GameOver.
+        Game_Over = false;
+
+        // Restore the player: drop them safely back into the camera view
+        // with zero velocity so they don't immediately fall out again.
+        if (Player != null)
+        {
+            Vector3 camPos = Camera.main != null ? Camera.main.transform.position : Vector3.zero;
+            Player.transform.position = new Vector3(camPos.x, camPos.y, 0f);
+
+            Rigidbody2D rb = Player.GetComponent<Rigidbody2D>();
+            if (rb != null) rb.linearVelocity = Vector2.zero;
+        }
+
+        // Reset combo so the next jump starts clean.
+        ComboCount = 0;
+        ScoreMultiplier = 1f;
+
+        // Music back on and time resumed.
+        if (GetComponent<InGame_Music>() == null)
+            gameObject.AddComponent<InGame_Music>();
+        Time.timeScale = 1f;
+    }
+
+    // Finalize the session and hand control back to the platform.
+    // Called when the player presses End on the Continue popup.
+    // Spec: send results FIRST, then return to system.
+    void EndSessionAndReturnToSystem()
+    {
+        if (Luxodd_Bridge.Instance == null) return;
+
+        Luxodd_Bridge.Instance.SendLevelEnd(Score, () =>
+        {
+            Luxodd_Bridge.Instance.BackToSystem();
+        });
     }
 
     IEnumerator ShowHighScoreCelebration()
