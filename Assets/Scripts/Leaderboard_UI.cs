@@ -32,7 +32,8 @@ public class Leaderboard_UI : MonoBehaviour
     GameObject panel;
     bool visible = false;
 
-    const float CardScale = 0.78f;
+    [Tooltip("Overall size of the leaderboard card (1 = full size, 0.5 = half).")]
+    public float CardScale = 0.62f;
 
     // For animations
     Transform crownT;
