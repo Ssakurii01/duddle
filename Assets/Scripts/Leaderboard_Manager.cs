@@ -26,16 +26,36 @@ public static class Leaderboard_Manager
 
     public static IReadOnlyList<Entry> Get_Entries() => entries;
 
-    /// <summary>Add a score; the most recent one is kept at the top (chronological, not by rank).</summary>
+    /// <summary>
+    /// Record a session's final score for a player. Each player keeps
+    /// exactly one entry — their BEST score — so replaying the game
+    /// updates an existing row instead of stacking duplicates.
+    /// The list is kept sorted by score (descending) and trimmed to MaxEntries.
+    /// </summary>
     public static void Add_Score(string name, int score)
     {
         if (string.IsNullOrWhiteSpace(name)) name = "Player";
-        // Strip the separators so a wild name can't corrupt the prefs string.
+        // Strip separators so a wild name can't corrupt the prefs string.
         name = name.Replace("|", "").Replace(";", "").Trim();
         if (name.Length > 16) name = name.Substring(0, 16);
 
-        entries.Insert(0, new Entry(name, score));
-        if (entries.Count > MaxEntries) entries.RemoveRange(MaxEntries, entries.Count - MaxEntries);
+        // If this player is already on the board, just keep their highest.
+        int existing = entries.FindIndex(e => e.Name == name);
+        if (existing >= 0)
+        {
+            if (score > entries[existing].Score)
+                entries[existing] = new Entry(name, score);
+        }
+        else
+        {
+            entries.Add(new Entry(name, score));
+        }
+
+        // Always keep the board sorted by score, biggest first.
+        entries.Sort((a, b) => b.Score.CompareTo(a.Score));
+
+        if (entries.Count > MaxEntries)
+            entries.RemoveRange(MaxEntries, entries.Count - MaxEntries);
     }
 
     public static void Clear()

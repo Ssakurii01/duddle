@@ -276,8 +276,16 @@ public class Leaderboard_UI : MonoBehaviour
         {
             fetching = true;
             SetStatus("Loading...");
+
+            // Guard against the callback never firing (closed socket etc.)
+            // — after 5s we give up and show whatever we have locally.
+            bool[] handled = { false };
+            StartCoroutine(LoadingTimeout(handled, 5f));
+
             Luxodd_Bridge.Instance.FetchLeaderboard(response =>
             {
+                if (handled[0]) return;
+                handled[0] = true;
                 fetching = false;
                 if (response != null && response.Leaderboard != null)
                 {
@@ -297,6 +305,16 @@ public class Leaderboard_UI : MonoBehaviour
             DisplayLocal();
             SetStatus(Luxodd_Bridge.Instance == null ? "" : "Offline (local scores)");
         }
+    }
+
+    IEnumerator LoadingTimeout(bool[] handled, float seconds)
+    {
+        yield return new WaitForSecondsRealtime(seconds);
+        if (handled[0]) yield break;
+        handled[0] = true;
+        fetching = false;
+        DisplayLocal();
+        SetStatus("Offline (local scores)");
     }
 
     void SetStatus(string s)

@@ -179,20 +179,37 @@ public class Lives_System : MonoBehaviour
 
     // -------- UI build --------
 
+    // Use our OWN dedicated overlay canvas with a high sortingOrder so the
+    // hearts and respawn countdown sit on top of every other UI element.
+    // Reusing an existing canvas was unreliable in WebGL — the hearts were
+    // ending up under Background_Canvas or behind the score canvas at runtime.
     Canvas FindOverlayCanvas()
     {
-        Canvas[] all = FindObjectsByType<Canvas>(FindObjectsSortMode.None);
-        foreach (Canvas c in all)
-            if (c.renderMode == RenderMode.ScreenSpaceOverlay) return c;
+        const string CanvasName = "Lives_Canvas";
 
-        GameObject canvasObj = new GameObject("Lives_Canvas");
+        // Reuse our canvas if we already created one this session.
+        GameObject existing = GameObject.Find(CanvasName);
+        if (existing != null)
+        {
+            Canvas existingC = existing.GetComponent<Canvas>();
+            if (existingC != null) return existingC;
+        }
+
+        GameObject canvasObj = new GameObject(CanvasName);
         Canvas nc = canvasObj.AddComponent<Canvas>();
         nc.renderMode = RenderMode.ScreenSpaceOverlay;
-        nc.sortingOrder = 50;
+        nc.sortingOrder = 100; // above everything
+        nc.additionalShaderChannels =
+            AdditionalCanvasShaderChannels.TexCoord1 |
+            AdditionalCanvasShaderChannels.Normal |
+            AdditionalCanvasShaderChannels.Tangent;
+
         CanvasScaler s = canvasObj.AddComponent<CanvasScaler>();
         s.uiScaleMode = CanvasScaler.ScaleMode.ScaleWithScreenSize;
-        s.referenceResolution = new Vector2(1080, 1920);
+        s.referenceResolution = new Vector2(1920, 1080); // match Luxodd WebGL aspect
+        s.screenMatchMode = CanvasScaler.ScreenMatchMode.MatchWidthOrHeight;
         s.matchWidthOrHeight = 0.5f;
+
         canvasObj.AddComponent<GraphicRaycaster>();
         return nc;
     }
