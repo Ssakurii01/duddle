@@ -435,41 +435,74 @@ public class Lives_System : MonoBehaviour
     // ourselves avoids relying on a font that ships the ♥ glyph — WebGL
     // builds dropped the character in the Legacy font so the hearts were
     // invisible there.
+    //
+    // The shape is constructed from two filled circles (top lobes) and a
+    // downward-pointing triangle (bottom). Simpler and more reliable on
+    // WebGL than the analytic cardioid formula.
     static Sprite cachedHeart;
     static Sprite BuildHeartSprite()
     {
         if (cachedHeart != null) return cachedHeart;
+
         const int size = 128;
         Texture2D tex = new Texture2D(size, size, TextureFormat.RGBA32, false);
         tex.wrapMode = TextureWrapMode.Clamp;
+        tex.filterMode = FilterMode.Bilinear;
 
-        // Sample each pixel against the analytic heart inequality
-        //   (x² + y² - 1)³ - x² y³ ≤ 0
-        // which gives a clean cardioid-like heart shape.
-        const float scale = 1.25f;
-        for (int px = 0; px < size; px++)
+        Color32 white = new Color32(255, 255, 255, 255);
+        Color32 clear = new Color32(255, 255, 255, 0);
+        Color32[] pixels = new Color32[size * size];
+
+        // Heart anatomy in texture coords (y=0 is bottom of texture)
+        Vector2 leftLobe  = new Vector2(size * 0.30f, size * 0.66f);
+        Vector2 rightLobe = new Vector2(size * 0.70f, size * 0.66f);
+        float   lobeR    = size * 0.22f;
+
+        // Bottom triangle that meets the lobes flush along their centerline
+        Vector2 triLeft  = new Vector2(size * 0.075f, size * 0.66f);
+        Vector2 triRight = new Vector2(size * 0.925f, size * 0.66f);
+        Vector2 triTip   = new Vector2(size * 0.50f,  size * 0.08f);
+
+        float lobeR2 = lobeR * lobeR;
+
+        for (int py = 0; py < size; py++)
         {
-            for (int py = 0; py < size; py++)
+            int rowStart = py * size;
+            for (int px = 0; px < size; px++)
             {
-                // Map pixel to roughly [-1.25, 1.25] in both axes,
-                // flip Y so the heart points down and shift it up.
-                float x = (px / (float)(size - 1)) * 2f * scale - scale;
-                float y = -((py / (float)(size - 1)) * 2f * scale - scale);
-                y += 0.20f; // push the heart up so the bottom tip is in frame
+                float x = px + 0.5f;
+                float y = py + 0.5f;
+                bool inside = false;
 
-                float xx = x * x;
-                float yy = y * y;
-                float f = (xx + yy - 1f);
-                float value = f * f * f - xx * y * y * y;
+                // Top-left lobe (squared distance to avoid sqrt)
+                float dxL = x - leftLobe.x;  float dyL = y - leftLobe.y;
+                if (dxL * dxL + dyL * dyL <= lobeR2) inside = true;
+                else
+                {
+                    // Top-right lobe
+                    float dxR = x - rightLobe.x; float dyR = y - rightLobe.y;
+                    if (dxR * dxR + dyR * dyR <= lobeR2) inside = true;
+                    else if (PointInTri(x, y, triLeft, triRight, triTip)) inside = true;
+                }
 
-                // Inside the curve where value <= 0
-                // Anti-alias the edge with a soft falloff.
-                float a = Mathf.Clamp01(0.5f - value * 6f);
-                tex.SetPixel(px, py, new Color(1f, 1f, 1f, a));
+                pixels[rowStart + px] = inside ? white : clear;
             }
         }
-        tex.Apply();
-        cachedHeart = Sprite.Create(tex, new Rect(0, 0, size, size), new Vector2(0.5f, 0.5f));
+
+        tex.SetPixels32(pixels);
+        tex.Apply(false, false);
+
+        cachedHeart = Sprite.Create(tex, new Rect(0, 0, size, size), new Vector2(0.5f, 0.5f), 100f, 0, SpriteMeshType.FullRect);
         return cachedHeart;
+    }
+
+    static bool PointInTri(float px, float py, Vector2 a, Vector2 b, Vector2 c)
+    {
+        float d1 = (px - b.x) * (a.y - b.y) - (a.x - b.x) * (py - b.y);
+        float d2 = (px - c.x) * (b.y - c.y) - (b.x - c.x) * (py - c.y);
+        float d3 = (px - a.x) * (c.y - a.y) - (c.x - a.x) * (py - a.y);
+        bool hasNeg = d1 < 0f || d2 < 0f || d3 < 0f;
+        bool hasPos = d1 > 0f || d2 > 0f || d3 > 0f;
+        return !(hasNeg && hasPos);
     }
 }
