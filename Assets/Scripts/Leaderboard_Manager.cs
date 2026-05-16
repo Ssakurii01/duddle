@@ -26,6 +26,13 @@ public static class Leaderboard_Manager
 
     public static IReadOnlyList<Entry> Get_Entries() => entries;
 
+    // The most recent run — tracked separately so the leaderboard panel can
+    // still surface the latest game's score even when the player's all-time
+    // best is higher.
+    public static string LastSessionName  { get; private set; } = "";
+    public static int    LastSessionScore { get; private set; } = -1;
+    public static bool   HasLastSession   => LastSessionScore >= 0;
+
     /// <summary>
     /// Record a session's final score for a player. Each player keeps
     /// exactly one entry — their BEST score — so replaying the game
@@ -38,6 +45,11 @@ public static class Leaderboard_Manager
         // Strip separators so a wild name can't corrupt the prefs string.
         name = name.Replace("|", "").Replace(";", "").Trim();
         if (name.Length > 16) name = name.Substring(0, 16);
+
+        // Remember the run we just finished so the UI can show it as
+        // "Your last game" even if the player's all-time best is higher.
+        LastSessionName  = name;
+        LastSessionScore = score;
 
         // If this player is already on the board, just keep their highest.
         int existing = entries.FindIndex(e => e.Name == name);

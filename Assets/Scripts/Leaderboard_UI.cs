@@ -45,6 +45,8 @@ public class Leaderboard_UI : MonoBehaviour
     readonly List<int> scoreValues = new List<int>();
     readonly List<Text> nameTexts = new List<Text>();
     readonly List<Image> rowImages = new List<Image>();
+    Text lastGameLabel;
+    Text lastGameValue;
 
     // Real-time settings (tweak from Inspector if you make these public)
     [Tooltip("Refresh from Luxodd server every N seconds while the panel is visible. 0 = off.")]
@@ -90,6 +92,7 @@ public class Leaderboard_UI : MonoBehaviour
         panel.SetActive(true);
         StartCoroutine(PlayInAnimations());
         RefreshData();
+        UpdateLastGameText();
         StartAutoRefresh();
     }
 
@@ -258,10 +261,47 @@ public class Leaderboard_UI : MonoBehaviour
                 18, new Color(1f, 1f, 1f, 0.65f), TextAnchor.MiddleCenter,
                 new Vector2(0.5f, 1f), new Vector2(0, -118), new Vector2(700, 22));
 
+        // ---------- "Your last game" indicator (below the rows) ----------
+        BuildLastGamePanel(card.transform, rowsTopY - rowsToShow * rowHeight - 20f);
+        UpdateLastGameText();
+
         // Action buttons removed — Play Again / Main Menu are handled by the scene's own buttons.
         AutoWireSceneButtons();
 
         block.onClick.AddListener(Hide);
+    }
+
+    void BuildLastGamePanel(Transform parent, float anchoredY)
+    {
+        // Soft panel that frames the latest session's score
+        GameObject panelLast = AddPanel(parent, "LastGame",
+            new Color(0.06f, 0.16f, 0.08f, 0.85f),
+            new Vector2(0.5f, 1f), new Vector2(0f, anchoredY), new Vector2(720f, 110f));
+
+        lastGameLabel = AddText(panelLast.transform, "LastLabel", "YOUR LAST GAME",
+            20, new Color(0.85f, 0.95f, 0.70f, 0.95f), TextAnchor.MiddleCenter,
+            new Vector2(0.5f, 1f), new Vector2(0f, -16f), new Vector2(700f, 24f));
+
+        lastGameValue = AddText(panelLast.transform, "LastValue", "—",
+            38, new Color(1f, 0.85f, 0.20f, 1f), TextAnchor.MiddleCenter,
+            new Vector2(0.5f, 1f), new Vector2(0f, -50f), new Vector2(700f, 50f));
+    }
+
+    void UpdateLastGameText()
+    {
+        if (lastGameValue == null) return;
+
+        if (Leaderboard_Manager.HasLastSession)
+        {
+            string n = string.IsNullOrEmpty(Leaderboard_Manager.LastSessionName)
+                ? "Player"
+                : Leaderboard_Manager.LastSessionName;
+            lastGameValue.text = n + " — " + Leaderboard_Manager.LastSessionScore.ToString("N0");
+        }
+        else
+        {
+            lastGameValue.text = "—";
+        }
     }
 
     // ------------------------------------------------------------------
