@@ -36,8 +36,10 @@ public class Lives_System : MonoBehaviour
     public float RespawnAboveCamera = 1.5f;
 
     // -------- runtime --------
-    Text[] heartTexts;
-    Text[] heartGlows;
+    // Hearts are Image-based (procedural sprite) so they render correctly on
+    // WebGL where the Legacy font doesn't include the ♥ character.
+    Image[] heartTexts;
+    Image[] heartGlows;
     Image[] badgeOuter;
     Image[] badgeInner;
     RectTransform[] heartParents;
@@ -228,8 +230,8 @@ public class Lives_System : MonoBehaviour
         crt.sizeDelta = new Vector2(420, 110);
         crt.anchoredPosition = new Vector2(0f, -25f);
 
-        heartTexts = new Text[MaxLives];
-        heartGlows = new Text[MaxLives];
+        heartTexts = new Image[MaxLives];
+        heartGlows = new Image[MaxLives];
         badgeOuter = new Image[MaxLives];
         badgeInner = new Image[MaxLives];
         heartParents = new RectTransform[MaxLives];
@@ -291,30 +293,37 @@ public class Lives_System : MonoBehaviour
             // ---- glow heart (behind, soft) ----
             GameObject glow = new GameObject("Glow");
             glow.transform.SetParent(group.transform, false);
-            Text glowT = AddHeartText(glow, "♥", 60, HeartGlow);
-            RectTransform glRT = glow.GetComponent<RectTransform>();
-            glRT.sizeDelta = new Vector2(80, 80);
-            heartGlows[i] = glowT;
+            Image glowImg = AddHeartImage(glow, HeartGlow, new Vector2(72, 72));
+            heartGlows[i] = glowImg;
 
-            // ---- main heart with outline + shadow ----
+            // ---- main heart ----
             GameObject main = new GameObject("Heart");
             main.transform.SetParent(group.transform, false);
-            Text mainT = AddHeartText(main, "♥", 50, HeartFull);
-            RectTransform mRT = main.GetComponent<RectTransform>();
-            mRT.sizeDelta = new Vector2(80, 80);
+            Image mainImg = AddHeartImage(main, HeartFull, new Vector2(56, 56));
 
-            // White outline ring
-            Outline outline = main.AddComponent<Outline>();
-            outline.effectColor = new Color(0.6f, 0.05f, 0.10f, 0.85f);
-            outline.effectDistance = new Vector2(2.5f, -2.5f);
-
-            // Drop shadow
+            // Drop shadow under the main heart (still works on Image graphics)
             Shadow drop = main.AddComponent<Shadow>();
             drop.effectColor = new Color(0f, 0f, 0f, 0.5f);
             drop.effectDistance = new Vector2(3f, -3f);
 
-            heartTexts[i] = mainT;
+            heartTexts[i] = mainImg;
         }
+    }
+
+    static Image AddHeartImage(GameObject obj, Color color, Vector2 size)
+    {
+        RectTransform rt = obj.AddComponent<RectTransform>();
+        rt.anchorMin = new Vector2(0.5f, 0.5f);
+        rt.anchorMax = new Vector2(0.5f, 0.5f);
+        rt.pivot     = new Vector2(0.5f, 0.5f);
+        rt.sizeDelta = size;
+
+        Image img = obj.AddComponent<Image>();
+        img.sprite = BuildHeartSprite();
+        img.color = color;
+        img.raycastTarget = false;
+        img.preserveAspect = true;
+        return img;
     }
 
     void BuildCountdownUI()
@@ -398,25 +407,6 @@ public class Lives_System : MonoBehaviour
 
     // -------- helpers --------
 
-    static Text AddHeartText(GameObject obj, string ch, int size, Color color)
-    {
-        RectTransform rt = obj.AddComponent<RectTransform>();
-        rt.anchorMin = new Vector2(0.5f, 0.5f);
-        rt.anchorMax = new Vector2(0.5f, 0.5f);
-        rt.pivot     = new Vector2(0.5f, 0.5f);
-
-        Text t = obj.AddComponent<Text>();
-        t.font = Resources.GetBuiltinResource<Font>("LegacyRuntime.ttf");
-        t.text = ch;
-        t.fontSize = size;
-        t.color = color;
-        t.alignment = TextAnchor.MiddleCenter;
-        t.raycastTarget = false;
-        t.horizontalOverflow = HorizontalWrapMode.Overflow;
-        t.verticalOverflow = VerticalWrapMode.Overflow;
-        return t;
-    }
-
     // Build a runtime circle sprite once and cache it
     static Sprite cachedCircle;
     static Sprite BuildCircleSprite()
@@ -439,5 +429,47 @@ public class Lives_System : MonoBehaviour
         tex.Apply();
         cachedCircle = Sprite.Create(tex, new Rect(0, 0, size, size), new Vector2(0.5f, 0.5f));
         return cachedCircle;
+    }
+
+    // Build a runtime heart sprite once and cache it. Drawing the heart
+    // ourselves avoids relying on a font that ships the ♥ glyph — WebGL
+    // builds dropped the character in the Legacy font so the hearts were
+    // invisible there.
+    static Sprite cachedHeart;
+    static Sprite BuildHeartSprite()
+    {
+        if (cachedHeart != null) return cachedHeart;
+        const int size = 128;
+        Texture2D tex = new Texture2D(size, size, TextureFormat.RGBA32, false);
+        tex.wrapMode = TextureWrapMode.Clamp;
+
+        // Sample each pixel against the analytic heart inequality
+        //   (x² + y² - 1)³ - x² y³ ≤ 0
+        // which gives a clean cardioid-like heart shape.
+        const float scale = 1.25f;
+        for (int px = 0; px < size; px++)
+        {
+            for (int py = 0; py < size; py++)
+            {
+                // Map pixel to roughly [-1.25, 1.25] in both axes,
+                // flip Y so the heart points down and shift it up.
+                float x = (px / (float)(size - 1)) * 2f * scale - scale;
+                float y = -((py / (float)(size - 1)) * 2f * scale - scale);
+                y += 0.20f; // push the heart up so the bottom tip is in frame
+
+                float xx = x * x;
+                float yy = y * y;
+                float f = (xx + yy - 1f);
+                float value = f * f * f - xx * y * y * y;
+
+                // Inside the curve where value <= 0
+                // Anti-alias the edge with a soft falloff.
+                float a = Mathf.Clamp01(0.5f - value * 6f);
+                tex.SetPixel(px, py, new Color(1f, 1f, 1f, a));
+            }
+        }
+        tex.Apply();
+        cachedHeart = Sprite.Create(tex, new Rect(0, 0, size, size), new Vector2(0.5f, 0.5f));
+        return cachedHeart;
     }
 }
