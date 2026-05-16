@@ -256,11 +256,6 @@ public class Leaderboard_UI : MonoBehaviour
             BuildRow(card.transform, i, y, i < entries.Count ? entries[i] : default, i < entries.Count);
         }
 
-        // ---------- Status text (top, small) ----------
-        statusText = AddText(card.transform, "Status", "",
-                18, new Color(1f, 1f, 1f, 0.65f), TextAnchor.MiddleCenter,
-                new Vector2(0.5f, 1f), new Vector2(0, -118), new Vector2(700, 22));
-
         // ---------- "Your last game" indicator (below the rows) ----------
         BuildLastGamePanel(card.transform, rowsTopY - rowsToShow * rowHeight - 20f);
         UpdateLastGameText();
@@ -543,12 +538,9 @@ public class Leaderboard_UI : MonoBehaviour
                 42, RankText, TextAnchor.MiddleCenter,
                 new Vector2(0.5f, 0.5f), Vector2.zero, new Vector2(70, 70));
 
-        // Avatar circle (green with monkey-like symbol)
-        GameObject avatarObj = AddPanel(row.transform, "Avatar", AvatarBg,
+        // Avatar circle (plain green badge, no symbol inside)
+        AddPanel(row.transform, "Avatar", AvatarBg,
             new Vector2(0f, 0.5f), new Vector2(140, 0), new Vector2(80, 80));
-        AddText(avatarObj.transform, "Monkey", "@",
-                48, Color.white, TextAnchor.MiddleCenter,
-                new Vector2(0.5f, 0.5f), Vector2.zero, new Vector2(80, 80));
 
         // ----- LEFT side: Player name area -----
         // Tiny label "PLAYER'S NAME" — clearly ABOVE the name
