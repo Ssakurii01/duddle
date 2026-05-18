@@ -54,6 +54,9 @@ public class Menu_Setup : MonoBehaviour
 
     // ---------- Background ----------
 
+    const string BgCanvasName = "MenuBackground_Fullscreen_Canvas";
+    const string BgImageName  = "MenuBackground_Fullscreen_Image";
+
     void ApplyBackground()
     {
         Sprite sprite = Resources.Load<Sprite>(BackgroundSpriteName);
@@ -65,18 +68,22 @@ public class Menu_Setup : MonoBehaviour
             return;
         }
 
-        // Try to find an existing Background GameObject; otherwise create one.
-        GameObject bg = GameObject.Find("Background");
-        if (bg == null)
-        {
-            // Find a Canvas to put the background on
-            Canvas canvas = FindFirstObjectByType<Canvas>();
-            if (canvas == null) return;
+        // Build (or reuse) a dedicated ScreenSpaceOverlay canvas sized to the
+        // full window. Whatever the original Background's parent canvas was —
+        // Screen Space Camera, fixed-aspect, etc. — it gets bypassed.
+        Canvas bgCanvas = GetOrCreateFullscreenBgCanvas();
 
-            bg = new GameObject("Background");
-            bg.transform.SetParent(canvas.transform, false);
-            // Put behind everything
-            bg.transform.SetAsFirstSibling();
+        // Find / create our background image inside that canvas
+        Transform existing = bgCanvas.transform.Find(BgImageName);
+        GameObject bg;
+        if (existing != null)
+        {
+            bg = existing.gameObject;
+        }
+        else
+        {
+            bg = new GameObject(BgImageName);
+            bg.transform.SetParent(bgCanvas.transform, false);
             bg.AddComponent<Image>();
         }
 
@@ -87,14 +94,62 @@ public class Menu_Setup : MonoBehaviour
         img.raycastTarget = false;
 
         RectTransform rt = bg.GetComponent<RectTransform>();
-        if (rt != null)
+        rt.anchorMin = Vector2.zero;
+        rt.anchorMax = Vector2.one;
+        rt.offsetMin = Vector2.zero;
+        rt.offsetMax = Vector2.zero;
+        rt.localScale = Vector3.one;
+
+        // Disable any old UI-Image-based "Background" that sat on a smaller
+        // canvas — otherwise it would render on top of our fullscreen image.
+        // We deliberately skip SpriteRenderer-based world backgrounds.
+        HideOverlappingBackgrounds(bg);
+    }
+
+    Canvas GetOrCreateFullscreenBgCanvas()
+    {
+        Canvas[] all = FindObjectsByType<Canvas>(FindObjectsSortMode.None);
+        foreach (Canvas c in all)
         {
-            // Stretch to fill the parent (canvas)
-            rt.anchorMin = Vector2.zero;
-            rt.anchorMax = Vector2.one;
-            rt.offsetMin = Vector2.zero;
-            rt.offsetMax = Vector2.zero;
-            rt.localScale = Vector3.one;
+            if (c != null && c.gameObject.name == BgCanvasName)
+                return c;
+        }
+
+        GameObject obj = new GameObject(BgCanvasName);
+        Canvas canvas = obj.AddComponent<Canvas>();
+        canvas.renderMode = RenderMode.ScreenSpaceOverlay;
+        canvas.sortingOrder = -1000; // render behind every other canvas
+
+        CanvasScaler s = obj.AddComponent<CanvasScaler>();
+        s.uiScaleMode = CanvasScaler.ScaleMode.ScaleWithScreenSize;
+        s.referenceResolution = new Vector2(1920, 1080);
+        // Expand makes the canvas always cover the full screen on any aspect ratio.
+        s.screenMatchMode = CanvasScaler.ScreenMatchMode.Expand;
+
+        obj.AddComponent<GraphicRaycaster>();
+        return canvas;
+    }
+
+    static void HideOverlappingBackgrounds(GameObject keep)
+    {
+        // Hide any UI Image whose name screams "background" and that isn't ours.
+        Image[] all = FindObjectsByType<Image>(FindObjectsSortMode.None);
+        foreach (Image i in all)
+        {
+            if (i == null || i.gameObject == keep) continue;
+            string n = i.gameObject.name.ToLower();
+            bool looksLikeBg =
+                n == "background" ||
+                n == "bg" ||
+                n == "background_image" ||
+                n.StartsWith("background_") && !i.gameObject.name.Contains("Canvas");
+            if (!looksLikeBg) continue;
+
+            // Don't touch the parallax layers — they are gameplay scrolling art,
+            // not the menu's "Background" placeholder.
+            if (n.Contains("parallax")) continue;
+
+            i.gameObject.SetActive(false);
         }
     }
 

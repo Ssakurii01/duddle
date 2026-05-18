@@ -31,8 +31,22 @@ public class ScreenSetup : MonoBehaviour
 
     static void FixScene()
     {
+        FixCameraRect();
         FixCanvasScalers();
         FitBackgroundsToPortrait();
+    }
+
+    static void FixCameraRect()
+    {
+        // Force every camera to render to the full screen — the previous
+        // setup occasionally left letterbox bars on landscape WebGL because
+        // a viewport rect smaller than (0,0,1,1) was serialized in the scene.
+        Camera[] cams = Object.FindObjectsByType<Camera>(FindObjectsSortMode.None);
+        foreach (Camera cam in cams)
+        {
+            if (cam == null) continue;
+            cam.rect = new Rect(0f, 0f, 1f, 1f);
+        }
     }
 
     static void FixCanvasScalers()
