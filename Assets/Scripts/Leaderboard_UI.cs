@@ -256,9 +256,8 @@ public class Leaderboard_UI : MonoBehaviour
             BuildRow(card.transform, i, y, i < entries.Count ? entries[i] : default, i < entries.Count);
         }
 
-        // ---------- "Your last game" indicator (below the rows) ----------
-        BuildLastGamePanel(card.transform, rowsTopY - rowsToShow * rowHeight - 20f);
-        UpdateLastGameText();
+        // The redundant "Your last game" panel was removed: the player's
+        // latest score is now reflected directly in the ranking above.
 
         // Action buttons removed — Play Again / Main Menu are handled by the scene's own buttons.
         AutoWireSceneButtons();
@@ -387,6 +386,9 @@ public class Leaderboard_UI : MonoBehaviour
     void DisplayLocal()
     {
         var entries = Leaderboard_Manager.Get_Entries();
+        // Highlight the row that belongs to the latest run so the player
+        // can immediately see where their newest game placed them.
+        string lastName = Leaderboard_Manager.LastSessionName ?? "";
         for (int i = 0; i < nameTexts.Count; i++)
         {
             bool hasEntry = i < entries.Count;
@@ -396,7 +398,8 @@ public class Leaderboard_UI : MonoBehaviour
                 if (nameTexts[i]  != null) nameTexts[i].text  = string.IsNullOrEmpty(e.Name) ? "Player" : e.Name;
                 if (scoreTexts[i] != null) scoreTexts[i].text = e.Score.ToString("N0");
                 scoreValues[i] = e.Score;
-                ApplyHighlight(i, i == 0); // top row always highlighted in local view
+                bool isMe = !string.IsNullOrEmpty(lastName) && e.Name == lastName;
+                ApplyHighlight(i, isMe || (string.IsNullOrEmpty(lastName) && i == 0));
             }
             else
             {

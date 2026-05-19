@@ -34,9 +34,10 @@ public static class Leaderboard_Manager
     public static bool   HasLastSession   => LastSessionScore >= 0;
 
     /// <summary>
-    /// Record a session's final score for a player. Each player keeps
-    /// exactly one entry — their BEST score — so replaying the game
-    /// updates an existing row instead of stacking duplicates.
+    /// Record the score from a session that just ended. Each player keeps
+    /// exactly one entry showing their LATEST run — replaying the game
+    /// overwrites the previous row, so the player's rank goes up or down
+    /// based on their most recent performance, not their all-time best.
     /// The list is kept sorted by score (descending) and trimmed to MaxEntries.
     /// </summary>
     public static void Add_Score(string name, int score)
@@ -46,22 +47,16 @@ public static class Leaderboard_Manager
         name = name.Replace("|", "").Replace(";", "").Trim();
         if (name.Length > 16) name = name.Substring(0, 16);
 
-        // Remember the run we just finished so the UI can show it as
-        // "Your last game" even if the player's all-time best is higher.
+        // Remember the run we just finished — useful for highlighting it.
         LastSessionName  = name;
         LastSessionScore = score;
 
-        // If this player is already on the board, just keep their highest.
+        // Overwrite the player's previous score (or add a new row if first time).
         int existing = entries.FindIndex(e => e.Name == name);
         if (existing >= 0)
-        {
-            if (score > entries[existing].Score)
-                entries[existing] = new Entry(name, score);
-        }
+            entries[existing] = new Entry(name, score);
         else
-        {
             entries.Add(new Entry(name, score));
-        }
 
         // Always keep the board sorted by score, biggest first.
         entries.Sort((a, b) => b.Score.CompareTo(a.Score));
