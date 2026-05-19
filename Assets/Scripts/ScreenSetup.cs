@@ -33,6 +33,7 @@ public class ScreenSetup : MonoBehaviour
     {
         FixCameraRect();
         FixCanvasScalers();
+        StretchBackgroundImages();
         FitBackgroundsToPortrait();
     }
 
@@ -46,6 +47,54 @@ public class ScreenSetup : MonoBehaviour
         {
             if (cam == null) continue;
             cam.rect = new Rect(0f, 0f, 1f, 1f);
+        }
+    }
+
+    // Walk every UI canvas's "Background" Image and force it to stretch
+    // edge-to-edge, then put the parent canvas in Expand mode so the
+    // background image actually covers the full WebGL window regardless of
+    // aspect ratio.
+    static void StretchBackgroundImages()
+    {
+        Image[] all = Object.FindObjectsByType<Image>(FindObjectsSortMode.None);
+        foreach (Image img in all)
+        {
+            if (img == null) continue;
+
+            string n = img.gameObject.name.ToLower();
+            bool isBackground =
+                n == "background" ||
+                n == "bg" ||
+                n == "back" ||
+                n == "background_image" ||
+                n.StartsWith("menubackground_");
+            // Don't touch the parallax-scroll layers — they're gameplay art.
+            if (!isBackground || n.Contains("parallax")) continue;
+
+            // Stretch the image to cover its parent.
+            RectTransform rt = img.GetComponent<RectTransform>();
+            if (rt != null)
+            {
+                rt.anchorMin = Vector2.zero;
+                rt.anchorMax = Vector2.one;
+                rt.offsetMin = Vector2.zero;
+                rt.offsetMax = Vector2.zero;
+                rt.localScale = Vector3.one;
+            }
+            img.preserveAspect = false;
+
+            // Make sure the canvas behind it expands to cover the screen.
+            Canvas canvas = img.GetComponentInParent<Canvas>();
+            if (canvas != null)
+            {
+                Canvas root = canvas.rootCanvas != null ? canvas.rootCanvas : canvas;
+                CanvasScaler scaler = root.GetComponent<CanvasScaler>();
+                if (scaler != null)
+                {
+                    scaler.uiScaleMode = CanvasScaler.ScaleMode.ScaleWithScreenSize;
+                    scaler.screenMatchMode = CanvasScaler.ScreenMatchMode.Expand;
+                }
+            }
         }
     }
 
