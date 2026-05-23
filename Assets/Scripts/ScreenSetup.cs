@@ -119,25 +119,66 @@ public class ScreenSetup : MonoBehaviour
         Camera cam = Camera.main;
         if (cam == null || !cam.orthographic) return;
 
-        // Calculate what the camera can see in portrait
+        // Whatever the actual aspect, find the camera's visible world rect.
         float camHeight = cam.orthographicSize * 2f;
-        float camAspect = cam.aspect; // Will be 9/16 = 0.5625 in portrait
-        float camWidth = camHeight * camAspect;
+        float camAspect = cam.aspect;
+        float camWidth  = camHeight * camAspect;
 
-        // Find all SpriteRenderers and scale backgrounds to fill
-        SpriteRenderer[] allSprites = Object.FindObjectsOfType<SpriteRenderer>();
-        foreach (SpriteRenderer sr in allSprites)
+        // Pass 1: try to scale every SpriteRenderer whose name looks like a background.
+        SpriteRenderer[] all = Object.FindObjectsByType<SpriteRenderer>(FindObjectsSortMode.None);
+        bool scaledAny = false;
+        foreach (SpriteRenderer sr in all)
         {
-            if (sr.sprite == null) continue;
+            if (sr == null || sr.sprite == null) continue;
+            if (!LooksLikeBackgroundName(sr.gameObject.name)) continue;
+            ScaleSpriteToFillCamera(sr, cam, camWidth, camHeight);
+            scaledAny = true;
+        }
 
-            string objName = sr.gameObject.name.ToLower();
-            // Match background objects by common names
-            if (objName.Contains("background") || objName.Contains("bck") ||
-                objName.Contains("bg") || objName == "back")
+        // Pass 2 (fallback): if nothing matched the name pattern, scale the
+        // sprite with the LOWEST sortingOrder that is not a parallax layer —
+        // that's almost certainly the background image of the scene.
+        if (!scaledAny)
+        {
+            SpriteRenderer back = null;
+            int lowestOrder = int.MaxValue;
+            float biggestArea = 0f;
+            foreach (SpriteRenderer sr in all)
             {
-                ScaleSpriteToFillCamera(sr, cam, camWidth, camHeight);
+                if (sr == null || sr.sprite == null) continue;
+                string n = sr.gameObject.name.ToLower();
+                if (n.Contains("parallax") || n.Contains("cloud")) continue;
+                // Prefer lowest sorting order, tie-break by largest area.
+                int order = sr.sortingOrder;
+                float area = sr.bounds.size.x * sr.bounds.size.y;
+                if (order < lowestOrder || (order == lowestOrder && area > biggestArea))
+                {
+                    lowestOrder = order;
+                    biggestArea = area;
+                    back = sr;
+                }
+            }
+            if (back != null)
+            {
+                Debug.Log("[ScreenSetup] Auto-detected background SpriteRenderer: " + back.gameObject.name +
+                          " (sortingOrder=" + back.sortingOrder + ")");
+                ScaleSpriteToFillCamera(back, cam, camWidth, camHeight);
             }
         }
+    }
+
+    static bool LooksLikeBackgroundName(string raw)
+    {
+        string n = raw.ToLower();
+        if (n.Contains("parallax") || n.Contains("cloud")) return false;
+        if (n.Contains("background") || n.Contains("backdrop")) return true;
+        if (n.Contains("bck"))     return true;
+        if (n.Contains("forest"))  return true;
+        if (n.Contains("jungle"))  return true;
+        if (n == "back" || n == "bg") return true;
+        if (n.StartsWith("bg_") || n.EndsWith("_bg")) return true;
+        if (n.StartsWith("back_") || n.EndsWith("_back")) return true;
+        return false;
     }
 
     static void ScaleSpriteToFillCamera(SpriteRenderer sr, Camera cam, float camWidth, float camHeight)
