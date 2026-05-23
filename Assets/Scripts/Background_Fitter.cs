@@ -2,18 +2,19 @@ using UnityEngine;
 using UnityEngine.UI;
 
 /// <summary>
-/// Drop on any GameObject that holds a background SpriteRenderer or UI Image
-/// to force-fill the entire camera view on every scene load / window resize.
+/// Drop on a background SpriteRenderer (or UI Image) to keep it filling the
+/// camera view as the player climbs.
 ///
-/// Use this when ScreenSetup's auto-detection misses your background because
-/// the GameObject is named something like "Forest" or "Jungle" instead of
-/// "Background".
+/// • Sprite renderers: scaled once on Start to cover the camera, then
+///   re-centered on the camera every LateUpdate so they follow the player
+///   as the camera moves up. Set ScaleEveryFrame if the camera's
+///   orthographicSize changes during play and you need to react.
+/// • UI Images: just stretched edge-to-edge inside the parent canvas.
+///
+/// Runs only at play time so it cannot accidentally rewrite the scene from
+/// the Editor.
 /// </summary>
-// Execute very late so we override Parallax_Layer (which writes the
-// background's world position in LateUpdate). Without this, parallax would
-// move the background out from under the camera every frame.
-[DefaultExecutionOrder(500)]
-[ExecuteAlways]
+[DefaultExecutionOrder(500)] // after Parallax_Layer's LateUpdate so we win
 public class Background_Fitter : MonoBehaviour
 {
     public enum FitMode
@@ -25,25 +26,34 @@ public class Background_Fitter : MonoBehaviour
     [Tooltip("Cover = fill screen (may crop edges). Contain = fit inside (may leave bars).")]
     public FitMode Mode = FitMode.Cover;
 
-    [Tooltip("Re-fit every frame so the background follows the camera and screen resizes.")]
-    public bool FitEveryFrame = true;
+    [Tooltip("Recompute scale every frame. Leave OFF unless the camera's orthographicSize changes during play.")]
+    public bool ScaleEveryFrame = false;
 
-    void Start()  { Fit(); }
-    void OnEnable() { Fit(); }
-    void LateUpdate()
+    [Tooltip("Re-center the sprite on the camera every frame (so it follows the player up).")]
+    public bool FollowCamera = true;
+
+    void Start()
     {
-        if (FitEveryFrame) Fit();
+        // One-time scale + center on Start. Avoids fighting other systems
+        // (Sky_Gradient, Parallax_Layer) in the editor.
+        ApplyScale();
+        Recenter();
     }
 
-    public void Fit()
+    void LateUpdate()
+    {
+        if (ScaleEveryFrame) ApplyScale();
+        if (FollowCamera)    Recenter();
+    }
+
+    void ApplyScale()
     {
         SpriteRenderer sr = GetComponent<SpriteRenderer>();
         if (sr != null && sr.sprite != null)
         {
-            FitSpriteRenderer(sr);
+            FitSpriteRendererScale(sr);
             return;
         }
-
         Image img = GetComponent<Image>();
         if (img != null)
         {
@@ -51,7 +61,18 @@ public class Background_Fitter : MonoBehaviour
         }
     }
 
-    void FitSpriteRenderer(SpriteRenderer sr)
+    void Recenter()
+    {
+        if (GetComponent<SpriteRenderer>() == null) return; // UI Images stay where the canvas puts them
+        Camera cam = Camera.main;
+        if (cam == null) return;
+        Vector3 p = transform.position;
+        p.x = cam.transform.position.x;
+        p.y = cam.transform.position.y;
+        transform.position = p;
+    }
+
+    void FitSpriteRendererScale(SpriteRenderer sr)
     {
         Camera cam = Camera.main;
         if (cam == null || !cam.orthographic) return;
@@ -67,17 +88,10 @@ public class Background_Fitter : MonoBehaviour
         float s  = Mode == FitMode.Cover ? Mathf.Max(sx, sy) : Mathf.Min(sx, sy);
 
         transform.localScale = new Vector3(s, s, transform.localScale.z);
-
-        // Center on the camera so it never drifts away.
-        Vector3 p = transform.position;
-        p.x = cam.transform.position.x;
-        p.y = cam.transform.position.y;
-        transform.position = p;
     }
 
     void FitImage(Image img)
     {
-        // For UI: stretch to fill the parent canvas.
         RectTransform rt = img.GetComponent<RectTransform>();
         if (rt == null) return;
         rt.anchorMin = Vector2.zero;
