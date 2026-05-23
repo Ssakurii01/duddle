@@ -354,26 +354,27 @@ public class Leaderboard_UI : MonoBehaviour
 
     void DisplayLocal()
     {
-        var entries = Leaderboard_Manager.Get_Entries();
-        // Highlight the row that belongs to the latest run so the player
-        // can immediately see where their newest game placed them.
-        string lastName = Leaderboard_Manager.LastSessionName ?? "";
+        // Single-entry leaderboard: row 0 shows the score from the latest run,
+        // every other row stays blank.
+        bool haveLast = Leaderboard_Manager.HasLastSession;
+        string lastName = string.IsNullOrEmpty(Leaderboard_Manager.LastSessionName)
+            ? "Player"
+            : Leaderboard_Manager.LastSessionName;
+        int lastScore = Leaderboard_Manager.LastSessionScore;
+
         for (int i = 0; i < nameTexts.Count; i++)
         {
-            bool hasEntry = i < entries.Count;
-            if (hasEntry)
+            if (i == 0 && haveLast)
             {
-                Leaderboard_Manager.Entry e = entries[i];
-                if (nameTexts[i]  != null) nameTexts[i].text  = string.IsNullOrEmpty(e.Name) ? "Player" : e.Name;
-                if (scoreTexts[i] != null) scoreTexts[i].text = e.Score.ToString("N0");
-                scoreValues[i] = e.Score;
-                bool isMe = !string.IsNullOrEmpty(lastName) && e.Name == lastName;
-                ApplyHighlight(i, isMe || (string.IsNullOrEmpty(lastName) && i == 0));
+                if (nameTexts[i]  != null) nameTexts[i].text  = lastName;
+                if (scoreTexts[i] != null) scoreTexts[i].text = lastScore.ToString("N0");
+                scoreValues[i] = lastScore;
+                ApplyHighlight(i, true);
             }
             else
             {
                 if (nameTexts[i]  != null) nameTexts[i].text  = "---";
-                if (scoreTexts[i] != null) scoreTexts[i].text = "0";
+                if (scoreTexts[i] != null) scoreTexts[i].text = "";
                 scoreValues[i] = 0;
                 ApplyHighlight(i, false);
             }
