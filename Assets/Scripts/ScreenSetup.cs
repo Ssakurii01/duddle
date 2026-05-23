@@ -183,6 +183,17 @@ public class ScreenSetup : MonoBehaviour
 
     static void ScaleSpriteToFillCamera(SpriteRenderer sr, Camera cam, float camWidth, float camHeight)
     {
+        // Auto-attach a Background_Fitter so the background follows the
+        // camera every frame (otherwise Parallax_Layer or camera motion will
+        // slide the jungle out of view and the Sky_Gradient sunset peach
+        // shows through behind it).
+        if (sr.gameObject.GetComponent<Background_Fitter>() == null)
+        {
+            Background_Fitter fitter = sr.gameObject.AddComponent<Background_Fitter>();
+            fitter.Mode = Background_Fitter.FitMode.Cover;
+            fitter.FitEveryFrame = true;
+        }
+
         // Get sprite world size at current scale
         float spriteWorldWidth = sr.sprite.bounds.size.x * sr.transform.lossyScale.x;
         float spriteWorldHeight = sr.sprite.bounds.size.y * sr.transform.lossyScale.y;

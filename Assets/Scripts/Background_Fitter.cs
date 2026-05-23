@@ -9,6 +9,10 @@ using UnityEngine.UI;
 /// the GameObject is named something like "Forest" or "Jungle" instead of
 /// "Background".
 /// </summary>
+// Execute very late so we override Parallax_Layer (which writes the
+// background's world position in LateUpdate). Without this, parallax would
+// move the background out from under the camera every frame.
+[DefaultExecutionOrder(500)]
 [ExecuteAlways]
 public class Background_Fitter : MonoBehaviour
 {
@@ -21,12 +25,12 @@ public class Background_Fitter : MonoBehaviour
     [Tooltip("Cover = fill screen (may crop edges). Contain = fit inside (may leave bars).")]
     public FitMode Mode = FitMode.Cover;
 
-    [Tooltip("Re-fit every frame so the background follows screen resizes.")]
+    [Tooltip("Re-fit every frame so the background follows the camera and screen resizes.")]
     public bool FitEveryFrame = true;
 
     void Start()  { Fit(); }
     void OnEnable() { Fit(); }
-    void Update()
+    void LateUpdate()
     {
         if (FitEveryFrame) Fit();
     }
