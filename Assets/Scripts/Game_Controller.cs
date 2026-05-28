@@ -1,4 +1,6 @@
 using System.Collections;
+using Luxodd.Game;               // ArcadeControls
+using Luxodd.Game.Scripts.Input; // ArcadeButtonColor
 using UnityEngine;
 using UnityEngine.SceneManagement;
 using UnityEngine.UI;
@@ -71,7 +73,12 @@ public class Game_Controller : MonoBehaviour
 
     void Update()
     {
-        bool confirmPressed = Input.GetKeyDown(KeyCode.Space) || Input.GetKeyDown(KeyCode.JoystickButton0);
+        // Accept Space (keyboard), the legacy JoystickButton0, OR the arcade
+        // Black button via ArcadeControls — covers Editor keyboard testing
+        // AND any device on either Input Manager / Input System.
+        bool confirmPressed = Input.GetKeyDown(KeyCode.Space)
+                              || Input.GetKeyDown(KeyCode.JoystickButton0)
+                              || ArcadeControls.GetButtonDown(ArcadeButtonColor.Black);
 
         // Start: trigger countdown instead of starting immediately
         if (!Game_Started && !Countdown_Started && confirmPressed)

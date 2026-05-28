@@ -1,4 +1,5 @@
 using UnityEngine;
+using Luxodd.Game; // ArcadeControls — arcade joystick / gamepad
 
 public class Player_Controller : MonoBehaviour
 {
@@ -41,7 +42,14 @@ public class Player_Controller : MonoBehaviour
             return;
         }
 
-        Movement = Input.GetAxisRaw("Horizontal") * Movement_Speed;
+        // Read horizontal input from the arcade joystick first (works for both
+        // legacy Input Manager and the new Input System, plus picks up
+        // generic gamepads that the "Horizontal" axis may not see). Fall back
+        // to the legacy axis so keyboard A/D / arrow keys still work in the
+        // Editor.
+        float h = ArcadeControls.GetStick().X;
+        if (Mathf.Abs(h) < 0.05f) h = Input.GetAxisRaw("Horizontal");
+        Movement = h * Movement_Speed;
         if (Movement > 0.01f) facingSign = 1f;
         else if (Movement < -0.01f) facingSign = -1f;
 
