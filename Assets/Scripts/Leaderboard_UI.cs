@@ -304,11 +304,37 @@ public class Leaderboard_UI : MonoBehaviour
 
     public void RefreshData()
     {
-        // Leaderboard now shows ONLY the latest run per player, sourced from
-        // the local Leaderboard_Manager. The Luxodd server endpoint returns
-        // each player's all-time best (TotalScore), which contradicts the
-        // "last game played" requirement, so we skip the server path entirely.
-        DisplayLocal();
+        if (fetching) return;
+
+        // Prefer the Luxodd server leaderboard so we see other players'
+        // highest scores (matches the leaderboard view on app.luxodd.com).
+        // Fall back to the local single-row view if the bridge is missing,
+        // the socket is down, or the request times out.
+        if (Luxodd_Bridge.Instance != null && Luxodd_Bridge.Instance.IsConnected)
+        {
+            fetching = true;
+
+            // Guard against the server callback never firing (closed socket
+            // etc.) — after 5s give up and show whatever we have locally.
+            bool[] handled = { false };
+            StartCoroutine(LoadingTimeout(handled, 5f));
+
+            Luxodd_Bridge.Instance.FetchLeaderboard(response =>
+            {
+                if (handled[0]) return;
+                handled[0] = true;
+                fetching = false;
+
+                if (response != null && response.Leaderboard != null && response.Leaderboard.Count > 0)
+                    DisplayServer(response);
+                else
+                    DisplayLocal();
+            });
+        }
+        else
+        {
+            DisplayLocal();
+        }
     }
 
     IEnumerator LoadingTimeout(bool[] handled, float seconds)
