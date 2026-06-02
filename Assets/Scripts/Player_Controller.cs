@@ -45,10 +45,10 @@ public class Player_Controller : MonoBehaviour
         // Read horizontal input from the arcade joystick first (works for both
         // legacy Input Manager and the new Input System, plus picks up
         // generic gamepads that the "Horizontal" axis may not see). Fall back
-        // to the legacy axis so keyboard A/D / arrow keys still work in the
-        // Editor.
+        // to the legacy axis (via Safe_Input so it doesn't throw under new
+        // Input System) so keyboard A/D / arrow keys still work in the Editor.
         float h = ArcadeControls.GetStick().X;
-        if (Mathf.Abs(h) < 0.05f) h = Input.GetAxisRaw("Horizontal");
+        if (Mathf.Abs(h) < 0.05f) h = Safe_Input.GetAxisRaw("Horizontal");
         Movement = h * Movement_Speed;
         if (Movement > 0.01f) facingSign = 1f;
         else if (Movement < -0.01f) facingSign = -1f;

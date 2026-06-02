@@ -75,9 +75,12 @@ public class Game_Controller : MonoBehaviour
     {
         // Accept Space (keyboard), the legacy JoystickButton0, OR the arcade
         // Black button via ArcadeControls — covers Editor keyboard testing
-        // AND any device on either Input Manager / Input System.
-        bool confirmPressed = Input.GetKeyDown(KeyCode.Space)
-                              || Input.GetKeyDown(KeyCode.JoystickButton0)
+        // AND any device on either Input Manager / Input System. Safe_Input
+        // wraps the legacy calls so they no-op (return false) when the
+        // project's Active Input Handling is "Input System Package (New)"
+        // only — the ArcadeControls path still works in that mode.
+        bool confirmPressed = Safe_Input.GetKeyDown(KeyCode.Space)
+                              || Safe_Input.GetKeyDown(KeyCode.JoystickButton0)
                               || ArcadeControls.GetButtonDown(ArcadeButtonColor.Black);
 
         // Start: trigger countdown instead of starting immediately
