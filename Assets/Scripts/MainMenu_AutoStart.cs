@@ -2,6 +2,8 @@ using UnityEngine;
 using UnityEngine.SceneManagement;
 using UnityEngine.UI;
 using TMPro;
+using Luxodd.Game;               // ArcadeControls
+using Luxodd.Game.Scripts.Input; // ArcadeButtonColor
 
 public class MainMenu_AutoStart : MonoBehaviour
 {
@@ -98,6 +100,21 @@ public class MainMenu_AutoStart : MonoBehaviour
     {
         if (loading) return;
 
+        // Let the player launch the game immediately by pressing the arcade
+        // Black button (or keyboard Space / JoystickButton0) — so a stuck or
+        // un-wired Play button isn't a dead-end. Mouse click on the Play
+        // button still works through the normal OnClick path.
+        bool confirmPressed = ArcadeControls.GetButtonDown(ArcadeButtonColor.Black)
+                              || Safe_Input.GetKeyDown(KeyCode.Space)
+                              || Safe_Input.GetKeyDown(KeyCode.Return)
+                              || Safe_Input.GetKeyDown(KeyCode.KeypadEnter)
+                              || Safe_Input.GetKeyDown(KeyCode.JoystickButton0);
+        if (confirmPressed)
+        {
+            LoadGameScene();
+            return;
+        }
+
         timer -= Time.unscaledDeltaTime;
         int secondsLeft = Mathf.Max(0, Mathf.CeilToInt(timer));
 
@@ -109,12 +126,15 @@ public class MainMenu_AutoStart : MonoBehaviour
 
         EaseKick();
 
-        if (timer <= 0f)
-        {
-            loading = true;
-            MainMenu_Music.StopMusic();
-            SceneManager.LoadScene(SceneToLoad);
-        }
+        if (timer <= 0f) LoadGameScene();
+    }
+
+    void LoadGameScene()
+    {
+        if (loading) return;
+        loading = true;
+        MainMenu_Music.StopMusic();
+        SceneManager.LoadScene(SceneToLoad);
     }
 
     void OnTick(int secondsLeft)
