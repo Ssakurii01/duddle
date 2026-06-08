@@ -44,12 +44,17 @@ public class Menu_Setup : MonoBehaviour
     [Tooltip("Fallback position used only when the Play button can't be found. Negative Y = below center.")]
     public Vector2 TimerFallbackPosition = new Vector2(420f, -380f);
 
+    [Header("Controls hint")]
+    [Tooltip("Spawn a 'PRESS ANY BUTTON TO START' label at the bottom of the menu so first-time arcade players know what to do.")]
+    public bool ShowControlsHint = true;
+
     void Start()
     {
         ApplyBackground();
         if (HideOldTextTitle) HideTitle();
         AdjustPlayButton();
         if (RepositionTimer) AdjustTimer();
+        if (ShowControlsHint) EnsureControlsHint();
     }
 
     // ---------- Background ----------
@@ -151,6 +156,14 @@ public class Menu_Setup : MonoBehaviour
 
             i.gameObject.SetActive(false);
         }
+    }
+
+    // ---------- Controls hint ("PRESS ANY BUTTON TO START") ----------
+
+    void EnsureControlsHint()
+    {
+        if (FindFirstObjectByType<Controls_Hint>() != null) return;
+        gameObject.AddComponent<Controls_Hint>();
     }
 
     // ---------- Hide old text title ----------

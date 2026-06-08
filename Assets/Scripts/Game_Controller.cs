@@ -73,15 +73,12 @@ public class Game_Controller : MonoBehaviour
 
     void Update()
     {
-        // Accept Space (keyboard), the legacy JoystickButton0, OR the arcade
-        // Black button via ArcadeControls — covers Editor keyboard testing
-        // AND any device on either Input Manager / Input System. Safe_Input
-        // wraps the legacy calls so they no-op (return false) when the
-        // project's Active Input Handling is "Input System Package (New)"
-        // only — the ArcadeControls path still works in that mode.
-        bool confirmPressed = Safe_Input.GetKeyDown(KeyCode.Space)
-                              || Safe_Input.GetKeyDown(KeyCode.JoystickButton0)
-                              || ArcadeControls.GetButtonDown(ArcadeButtonColor.Black);
+        // Confirm = ANY arcade button (Black/Red/Green/Yellow/Blue/Purple/
+        // Orange/White) OR keyboard Space/Enter OR any of JoystickButton0..5.
+        // Mirrors MainMenu_AutoStart.AnyConfirmPressed so the input rule is
+        // the same on every screen (Black is canonical but the team lead
+        // noted players reach for whatever button is closest).
+        bool confirmPressed = AnyConfirmPressed();
 
         // Start: trigger countdown instead of starting immediately
         if (!Game_Started && !Countdown_Started && confirmPressed)
@@ -114,6 +111,19 @@ public class Game_Controller : MonoBehaviour
         Txt_Score.rectTransform.localScale = scoreBaseScale * (1f + scoreKick);
 
         UpdateComboText();
+    }
+
+    static bool AnyConfirmPressed()
+    {
+        foreach (ArcadeButtonColor c in System.Enum.GetValues(typeof(ArcadeButtonColor)))
+            if (ArcadeControls.GetButtonDown(c)) return true;
+
+        if (Safe_Input.GetKeyDown(KeyCode.Space))        return true;
+        if (Safe_Input.GetKeyDown(KeyCode.Return))       return true;
+        if (Safe_Input.GetKeyDown(KeyCode.KeypadEnter))  return true;
+        for (int i = 0; i <= 5; i++)
+            if (Safe_Input.GetKeyDown(KeyCode.JoystickButton0 + i)) return true;
+        return false;
     }
 
     void FixedUpdate()

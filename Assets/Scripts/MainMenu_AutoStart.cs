@@ -100,16 +100,12 @@ public class MainMenu_AutoStart : MonoBehaviour
     {
         if (loading) return;
 
-        // Let the player launch the game immediately by pressing the arcade
-        // Black button (or keyboard Space / JoystickButton0) — so a stuck or
-        // un-wired Play button isn't a dead-end. Mouse click on the Play
-        // button still works through the normal OnClick path.
-        bool confirmPressed = ArcadeControls.GetButtonDown(ArcadeButtonColor.Black)
-                              || Safe_Input.GetKeyDown(KeyCode.Space)
-                              || Safe_Input.GetKeyDown(KeyCode.Return)
-                              || Safe_Input.GetKeyDown(KeyCode.KeypadEnter)
-                              || Safe_Input.GetKeyDown(KeyCode.JoystickButton0);
-        if (confirmPressed)
+        // Let the player launch the game immediately by pressing ANY arcade
+        // button (Black is canonical, but the team lead noted players reach
+        // for whatever they see first), or keyboard Space/Enter, or any of
+        // JoystickButton0..5. Mouse click on the Play button still works
+        // through the normal OnClick path.
+        if (AnyConfirmPressed())
         {
             LoadGameScene();
             return;
@@ -135,6 +131,22 @@ public class MainMenu_AutoStart : MonoBehaviour
         loading = true;
         MainMenu_Music.StopMusic();
         SceneManager.LoadScene(SceneToLoad);
+    }
+
+    static bool AnyConfirmPressed()
+    {
+        // Any arcade button (Black/Red/Green/Yellow/Blue/Purple/Orange/White)
+        foreach (ArcadeButtonColor c in System.Enum.GetValues(typeof(ArcadeButtonColor)))
+        {
+            if (ArcadeControls.GetButtonDown(c)) return true;
+        }
+        // Keyboard / generic joystick fallbacks
+        if (Safe_Input.GetKeyDown(KeyCode.Space))        return true;
+        if (Safe_Input.GetKeyDown(KeyCode.Return))       return true;
+        if (Safe_Input.GetKeyDown(KeyCode.KeypadEnter))  return true;
+        for (int i = 0; i <= 5; i++)
+            if (Safe_Input.GetKeyDown(KeyCode.JoystickButton0 + i)) return true;
+        return false;
     }
 
     void OnTick(int secondsLeft)
