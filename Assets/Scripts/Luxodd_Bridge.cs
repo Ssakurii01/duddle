@@ -64,6 +64,12 @@ public class Luxodd_Bridge : MonoBehaviour
             return;
         }
         Instance = this;
+
+        // DontDestroyOnLoad only accepts root GameObjects. If this script was
+        // dropped onto a child of some parent (canvas, plugin prefab, etc.),
+        // re-parent ourselves to the root first so Unity stops logging the
+        // "only works for root GameObjects" warning every scene load.
+        if (transform.parent != null) transform.SetParent(null, true);
         DontDestroyOnLoad(gameObject);
 
         // Make sure the plugin prefab also persists, otherwise its services
@@ -82,7 +88,10 @@ public class Luxodd_Bridge : MonoBehaviour
     {
         if (c == null) return;
         Transform root = c.transform.root;
-        if (root != null) DontDestroyOnLoad(root.gameObject);
+        if (root == null) return;
+        // transform.root is always the outermost ancestor — already a root
+        // by definition, so DontDestroyOnLoad won't warn about it.
+        if (root.parent == null) DontDestroyOnLoad(root.gameObject);
     }
 
     // ---------------- Connection ----------------
