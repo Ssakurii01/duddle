@@ -38,9 +38,13 @@ namespace Luxodd.Game.Scripts.Network
         
         [DllImport("__Internal")]
         private static extern string GetParentHost();
-        
-        [DllImport("__Internal")]
-        private static extern void GetWebSocketProtocol();
+
+        // GetWebSocketProtocol is correctly declared (and used) in
+        // WebGlHostWrapper.cs as `string GetWebSocketProtocol()`. The duplicate
+        // declaration that lived here returned `void`, which conflicted with
+        // the JS-side signature and caused the WebGL build to fail with
+        // wasm-ld: error: function signature mismatch: GetWebSocketProtocol.
+        // Removed — nothing in this file referenced it anyway.
 
 #if UNITY_WEBGL && !UNITY_EDITOR
         [DllImport("__Internal")] 
